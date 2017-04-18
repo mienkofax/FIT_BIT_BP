@@ -5,6 +5,7 @@
 
 #include <Poco/JSON/Object.h>
 
+#include "zmq/ZMQMessageError.h"
 #include "zmq/ZMQMessageType.h"
 
 namespace BeeeOn {
@@ -22,6 +23,16 @@ namespace BeeeOn {
  *
  * Metody zacinajuce setXXX() nastavuju urcity parameter do json spravy
  * a metody zacinajuce getXXX() vyberaju pozadovane data z json spravy.
+ *
+ * Example for receiving message (client):
+ *     ZMQMessage m = ZMQMessage::fromJSON(input);
+ *
+ *     if (m.type() == ZMQMessageType::TYPE_ERROR)
+ *         ZMQMessageError error = m.toError();
+ *
+ * Example for sending message (server):
+ *     ZMQMessage m = ZMQMessage::createError();
+ *     zmqServer.send(m);
  */
 class ZMQMessage {
 public:
@@ -37,10 +48,18 @@ public:
 
 	std::string toString() const;
 
+	ZMQMessageError toError();
+
 	/*
 	 * Parses json message and store into Poco::JSON::Object (m_json).
 	 */
 	static ZMQMessage fromJSON(const std::string &json);
+
+	/*
+	 * It is a response to an unknown message/attribute.
+	 */
+	static ZMQMessage fromError(const ZMQMessageError::Error error,
+		const std::string &message);
 
 private:
 	/*
@@ -54,6 +73,22 @@ private:
 	 * }
 	 */
 	void setType(const ZMQMessageType &type);
+
+	/*
+	 * {
+	 *     "error_code" : 0
+	 * }
+	 */
+	void setErrorCode(const ZMQMessageError::Error &error);
+	ZMQMessageError::Error getErrorCode();
+
+	/*
+	 * {
+	 *     "error_message" : "Error message in ..."
+	 * }
+	 */
+	void setErrorMessage(const std::string errorMessage);
+	std::string getErrorMessage();
 
 private:
 	Poco::JSON::Object::Ptr m_json;
