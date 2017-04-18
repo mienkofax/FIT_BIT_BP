@@ -36,6 +36,7 @@ file(GLOB SOURCES
 	${PROJECT_SOURCE_DIR}/util/CSVSensorDataFormatter.cpp
 	${PROJECT_SOURCE_DIR}/util/NullSensorDataFormatter.cpp
 	${PROJECT_SOURCE_DIR}/util/SensorDataFormatter.cpp
+	${PROJECT_SOURCE_DIR}/zmq/ZMQMessageType.cpp
 )
 
 include_directories(
