@@ -10,6 +10,7 @@ find_library (POCO_NET PocoNet)
 find_library (POCO_JSON PocoJSON)
 find_library (POCO_XML PocoXML)
 find_library (PTHREAD pthread)
+find_library (ZMQ zmq)
 
 file(GLOB TEST_SOURCES
 	${PROJECT_SOURCE_DIR}/core/AnswerQueueTest.cpp
@@ -42,6 +43,7 @@ set(LIBS
 	${POCO_JSON}
 	${CPP_UNIT}
 	${PTHREAD}
+	${ZMQ}
 )
 
 target_link_libraries(test-suite-gateway
