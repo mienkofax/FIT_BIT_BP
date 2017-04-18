@@ -16,6 +16,7 @@ file(GLOB TEST_SOURCES
 	${PROJECT_SOURCE_DIR}/core/CommandDispatcherTest.cpp
 	${PROJECT_SOURCE_DIR}/core/CommandsTest.cpp
 	${PROJECT_SOURCE_DIR}/util/IncompleteTimestampTest.cpp
+	${PROJECT_SOURCE_DIR}/zmq/ZMQDeviceManagerTableTest.cpp
 	${PROJECT_SOURCE_DIR}/zmq/ZMQMessageTest.cpp
 )
 
