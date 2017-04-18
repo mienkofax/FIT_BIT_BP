@@ -7,6 +7,7 @@ find_library (POCO_UTIL PocoUtil)
 find_library (POCO_SSL PocoNetSSL)
 find_library (POCO_CRYPTO PocoCrypto)
 find_library (POCO_NET PocoNet)
+find_library (POCO_JSON PocoJSON)
 find_library (POCO_XML PocoXML)
 find_library (PTHREAD pthread)
 
@@ -15,6 +16,7 @@ file(GLOB TEST_SOURCES
 	${PROJECT_SOURCE_DIR}/core/CommandDispatcherTest.cpp
 	${PROJECT_SOURCE_DIR}/core/CommandsTest.cpp
 	${PROJECT_SOURCE_DIR}/util/IncompleteTimestampTest.cpp
+	${PROJECT_SOURCE_DIR}/zmq/ZMQMessageTest.cpp
 )
 
 include_directories(
@@ -36,6 +38,7 @@ set(LIBS
 	${POCO_UTIL}
 	${POCO_NET}
 	${POCO_XML}
+	${POCO_JSON}
 	${CPP_UNIT}
 	${PTHREAD}
 )
