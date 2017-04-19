@@ -4,6 +4,7 @@
 			<add name="runnables" ref="virtualSensor1" if-yes="${virtual-sensor1.enable}" />
 			<add name="runnables" ref="virtualSensor2" if-yes="${virtual-sensor2.enable}" />
 			<add name="runnables" ref="virtualSensor3" if-yes="${virtual-sensor3.enable}" />
+			<add name="runnables" ref="zmqBroker" if-yes="${zmq-broker.enable}" />
 		</instance>
 
 		<instance name="distributor" class="BeeeOn::BasicDistributor">
@@ -34,6 +35,14 @@
 			<set name="min" number="${virtual-sensor3.min}" />
 			<set name="max" number="${virtual-sensor3.max}" />
 			<set name="deviceId" text="${virtual-sensor3.deviceId}" />
+			<set name="distributor" ref="distributor"/>
+		</instance>
+
+		<instance name="zmqBroker" class="BeeeOn::ZMQBroker">
+			<set name="dataServerHost" text="${zmq-broker.data.server.host}" />
+			<set name="dataServerPort" number="${zmq-broker.data.server.port}" />
+			<set name="helloServerHost" text="${zmq-broker.hello.server.host}" />
+			<set name="helloServerPort" number="${zmq-broker.hello.server.port}" />
 			<set name="distributor" ref="distributor"/>
 		</instance>
 
