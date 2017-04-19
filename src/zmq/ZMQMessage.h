@@ -5,6 +5,7 @@
 
 #include <Poco/JSON/Object.h>
 
+#include "model/DeviceManagerID.h"
 #include "model/DevicePrefix.h"
 #include "zmq/ZMQMessageError.h"
 #include "zmq/ZMQMessageType.h"
@@ -53,6 +54,8 @@ public:
 
 	DevicePrefix toHelloRequest();
 
+	DeviceManagerID toHelloResponse();
+
 	/*
 	 * Parses json message and store into Poco::JSON::Object (m_json).
 	 */
@@ -65,6 +68,8 @@ public:
 		const std::string &message);
 
 	static ZMQMessage fromHelloRequest(const DevicePrefix &devicePrefix);
+
+	static ZMQMessage fromHelloResponse(const DeviceManagerID &deviceManagerID);
 
 private:
 	/*
@@ -102,6 +107,13 @@ private:
 	 */
 	void setDeviceManagerPrefix(const DevicePrefix &devicePrefix);
 	DevicePrefix getDevicePrefix(Poco::JSON::Object::Ptr jsonObject);
+
+	/*
+	 * {
+	 *     "device_manager_id" : "0xa00"
+	 * }
+	 */
+	void setDeviceManagerID(const DeviceManagerID &deviceManagerID);
 
 private:
 	Poco::JSON::Object::Ptr m_json;

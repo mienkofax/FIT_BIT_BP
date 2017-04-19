@@ -29,10 +29,21 @@ namespace BeeeOn {
  *     "message_type" : "hello_request",
  *     "device_manager_prefix" : "Fitprotocol"
  * }
+ *
+ * 3. message_type: hello_response
+ *
+ * Sprava obsahujuca vygenerovane DeviceManagerID, ktore sa dalej
+ * pouzije pre identifikaciu datoveho socketu.
+ *
+ * {
+ *     "message_type" : "hello_response",
+ *     "device_manager_id" : "0xa100"
+ * }
  */
 struct ZMQMessageTypeEnum {
 	enum Raw {
 		TYPE_ERROR,
+		TYPE_HELLO_RESPONSE,
 		TYPE_HELLO_REQUEST,
 	};
 

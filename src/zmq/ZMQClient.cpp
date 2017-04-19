@@ -118,6 +118,14 @@ void ZMQClient::helloServerReceive()
 		return;
 
 	switch (zmqMessage.type().raw()) {
+	case ZMQMessageType::TYPE_HELLO_RESPONSE:
+		m_deviceMangerID = zmqMessage.toHelloResponse();
+
+		if (logger().debug()) {
+			logger().debug("assigned device manger ID: "
+				+ m_deviceMangerID.value().toString());
+		}
+		break;
 	default:
 		sendError(
 			ZMQMessageError::ERROR_UNSUPPORTED_MESSAGE,

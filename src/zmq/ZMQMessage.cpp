@@ -47,6 +47,11 @@ void ZMQMessage::setDeviceManagerPrefix(const DevicePrefix &devicePrefix)
 	m_json->set("device_manager_prefix", devicePrefix.toString());
 }
 
+void ZMQMessage::setDeviceManagerID(const DeviceManagerID &deviceManagerID)
+{
+	m_json->set("device_manager_id", deviceManagerID.toString());
+}
+
 ZMQMessageError::Error ZMQMessage::getErrorCode()
 {
 	return static_cast<ZMQMessageError::Error>(
@@ -88,6 +93,17 @@ ZMQMessage ZMQMessage::fromHelloRequest(const DevicePrefix &devicePrefix)
 	return msg;
 }
 
+ZMQMessage ZMQMessage::fromHelloResponse(const DeviceManagerID &deviceManagerID)
+{
+	ZMQMessage msg;
+
+	msg.setType(ZMQMessageType::fromRaw(
+		ZMQMessageType::TYPE_HELLO_RESPONSE));
+	msg.setDeviceManagerID(deviceManagerID);
+
+	return msg;
+}
+
 ZMQMessage ZMQMessage::fromJSON(const string &json)
 {
 	return ZMQMessage(JsonUtil::parse(json));
@@ -101,4 +117,10 @@ ZMQMessageError ZMQMessage::toError()
 DevicePrefix ZMQMessage::toHelloRequest()
 {
 	return getDevicePrefix(m_json);
+}
+
+DeviceManagerID ZMQMessage::toHelloResponse()
+{
+	return DeviceManagerID(DeviceManagerID::parse(
+		JsonUtil::extract<string>(m_json, "device_manager_id")));
 }

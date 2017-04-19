@@ -204,6 +204,10 @@ void ZMQBroker::registerDeviceManager(ZMQMessage &zmqMessage)
 		if (logger().debug())
 			logger().debug("register device manager id: "
 				+ deviceManagerID.toString());
+
+		ZMQMessage msg = ZMQMessage::fromHelloResponse(deviceManagerID);
+
+		ZMQUtil::send(m_helloServerSocket, msg.toString());
 	}
 	catch(Poco::RangeException &ex) {
 		logger().log(ex, __FILE__, __LINE__);

@@ -7,6 +7,7 @@
 #include "model/DeviceManagerID.h"
 #include "model/DevicePrefix.h"
 #include "zmq/ZMQConnector.h"
+#include "model/DeviceManagerID.h"
 
 namespace BeeeOn {
 
