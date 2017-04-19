@@ -5,6 +5,7 @@
 
 #include <Poco/JSON/Object.h>
 
+#include "model/DevicePrefix.h"
 #include "zmq/ZMQMessageError.h"
 #include "zmq/ZMQMessageType.h"
 
@@ -50,6 +51,8 @@ public:
 
 	ZMQMessageError toError();
 
+	DevicePrefix toHelloRequest();
+
 	/*
 	 * Parses json message and store into Poco::JSON::Object (m_json).
 	 */
@@ -60,6 +63,8 @@ public:
 	 */
 	static ZMQMessage fromError(const ZMQMessageError::Error error,
 		const std::string &message);
+
+	static ZMQMessage fromHelloRequest(const DevicePrefix &devicePrefix);
 
 private:
 	/*
@@ -89,6 +94,14 @@ private:
 	 */
 	void setErrorMessage(const std::string errorMessage);
 	std::string getErrorMessage();
+
+	/*
+	 * {
+	 *     "device_manager_prefix" : "Fitprotocol"
+	 * }
+	 */
+	void setDeviceManagerPrefix(const DevicePrefix &devicePrefix);
+	DevicePrefix getDevicePrefix(Poco::JSON::Object::Ptr jsonObject);
 
 private:
 	Poco::JSON::Object::Ptr m_json;

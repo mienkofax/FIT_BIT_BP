@@ -6,6 +6,7 @@ EnumHelper<ZMQMessageTypeEnum::Raw>::ValueMap &ZMQMessageTypeEnum::valueMap()
 {
 	static EnumHelper<ZMQMessageTypeEnum::Raw>::ValueMap valueMap = {
 		{ZMQMessageTypeEnum::TYPE_ERROR, "error"},
+		{ZMQMessageTypeEnum::TYPE_HELLO_REQUEST, "hello_request"},
 	};
 
 	return valueMap;

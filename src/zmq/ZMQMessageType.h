@@ -18,10 +18,22 @@ namespace BeeeOn {
  *     "error_code" : 0,
  *     "error_message" : "unknown error"
  * }
+ *
+ * 2. message_type: hello_request
+ *
+ * DeviceManager MUST be always registered with its prefix before it
+ * starts to send or receive messages with commands (from device
+ * managers).
+ *
+ * {
+ *     "message_type" : "hello_request",
+ *     "device_manager_prefix" : "Fitprotocol"
+ * }
  */
 struct ZMQMessageTypeEnum {
 	enum Raw {
 		TYPE_ERROR,
+		TYPE_HELLO_REQUEST,
 	};
 
 	static EnumHelper<Raw>::ValueMap &valueMap();

@@ -4,6 +4,7 @@
 #include "core/CommandDispatcher.h"
 #include "core/Distributor.h"
 #include "zmq/ZMQConnector.h"
+#include "zmq/ZMQDeviceManagerTable.h"
 
 namespace BeeeOn {
 
@@ -44,9 +45,16 @@ protected:
 	void handleDataMessage(ZMQMessage &zmqMessage,
 		const DeviceManagerID &deviceManagerID);
 
+	/*
+	 * Registruje nove zariadenie do zoznamu pripojenych device
+	 * mangerov a novo pripojenemu device manageru priradi ID.
+	 */
+	void registerDeviceManager(ZMQMessage &zmqMessage);
+
 protected:
 	Poco::SharedPtr<Distributor> m_distributor;
 	Poco::SharedPtr<CommandDispatcher> m_commandDispatcher;
+	ZMQDeviceManagerTable m_deviceManagersTable;
 };
 
 }

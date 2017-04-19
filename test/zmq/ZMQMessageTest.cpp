@@ -17,11 +17,13 @@ class ZMQMessageTest : public CppUnit::TestFixture {
 	CPPUNIT_TEST_SUITE(ZMQMessageTest);
 	CPPUNIT_TEST(testParseFromJSON);
 	CPPUNIT_TEST(testErrorMessage);
+	CPPUNIT_TEST(testHelloRequest);
 	CPPUNIT_TEST_SUITE_END();
 
 public:
 	void testParseFromJSON();
 	void testErrorMessage();
+	void testHelloRequest();
 
 private:
 	std::string toPocoJSON(const std::string &json);
@@ -87,6 +89,27 @@ void ZMQMessageTest::testErrorMessage()
 	CPPUNIT_ASSERT(error.errorMessage() == "unknown error");
 	CPPUNIT_ASSERT_EQUAL(error.errorCode(),
 		static_cast<ZMQMessageError::Error>(0));
+}
+
+void ZMQMessageTest::testHelloRequest()
+{
+	string jsonMessage = R"(
+		{
+			"message_type" : "hello_request",
+			"device_manager_prefix" : "Fitprotocol"
+		}
+	)";
+
+	ZMQMessage message = ZMQMessage::fromHelloRequest(
+		DevicePrefix::fromRaw(DevicePrefix::PREFIX_FITPROTOCOL));
+
+	CPPUNIT_ASSERT(toPocoJSON(jsonMessage) == message.toString());
+	CPPUNIT_ASSERT(message.type() == ZMQMessageType::TYPE_HELLO_REQUEST);
+
+	DevicePrefix helloRequest = message.toHelloRequest();
+	CPPUNIT_ASSERT_EQUAL(
+		helloRequest,
+		DevicePrefix::fromRaw(DevicePrefix::PREFIX_FITPROTOCOL));
 }
 
 }

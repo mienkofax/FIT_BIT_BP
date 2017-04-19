@@ -124,6 +124,9 @@ void ZMQBroker::helloServerReceive()
 void ZMQBroker::handleHelloMessage(ZMQMessage &zmqMessage)
 {
 	switch (zmqMessage.type().raw()) {
+	case ZMQMessageType::TYPE_HELLO_REQUEST:
+		registerDeviceManager(zmqMessage);
+		break;
 	default:
 		sendError(
 			ZMQMessageError::ERROR_UNSUPPORTED_MESSAGE,
@@ -189,4 +192,25 @@ void ZMQBroker::setCommandDispatcher(Poco::SharedPtr<CommandDispatcher> dispatch
 unsigned long ZMQBroker::deviceManagersCount()
 {
 	return m_deviceManagersTable.count();
+}
+
+void ZMQBroker::registerDeviceManager(ZMQMessage &zmqMessage)
+{
+	try {
+		DeviceManagerID deviceManagerID =
+			m_deviceManagersTable.registerDaemonPrefix(
+				zmqMessage.toHelloRequest());
+
+		if (logger().debug())
+			logger().debug("register device manager id: "
+				+ deviceManagerID.toString());
+	}
+	catch(Poco::RangeException &ex) {
+		logger().log(ex, __FILE__, __LINE__);
+
+		sendError(
+			ZMQMessageError::ERROR_MAXIMUM_DEVICE_MANAGERS,
+			"maximum number of registered device managers",
+			m_helloServerSocket);
+	}
 }

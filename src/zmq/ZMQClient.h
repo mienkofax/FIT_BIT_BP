@@ -49,7 +49,6 @@ private:
 private:
 	Poco::Nullable<DeviceManagerID> m_deviceMangerID;
 	DevicePrefix m_devicePrefix;
-
 };
 
 }

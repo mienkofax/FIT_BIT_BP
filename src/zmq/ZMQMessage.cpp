@@ -42,6 +42,11 @@ void ZMQMessage::setErrorMessage(const string errorMessage)
 	m_json->set("error_message", errorMessage);
 }
 
+void ZMQMessage::setDeviceManagerPrefix(const DevicePrefix &devicePrefix)
+{
+	m_json->set("device_manager_prefix", devicePrefix.toString());
+}
+
 ZMQMessageError::Error ZMQMessage::getErrorCode()
 {
 	return static_cast<ZMQMessageError::Error>(
@@ -51,6 +56,12 @@ ZMQMessageError::Error ZMQMessage::getErrorCode()
 std::string ZMQMessage::getErrorMessage()
 {
 	return JsonUtil::extract<string>(m_json, "error_message");
+}
+
+DevicePrefix ZMQMessage::getDevicePrefix(Poco::JSON::Object::Ptr jsonObject)
+{
+	return DevicePrefix(DevicePrefix::parse(
+		JsonUtil::extract<std::string>(jsonObject, "device_manager_prefix")));
 }
 
 ZMQMessage ZMQMessage::fromError(
@@ -66,6 +77,17 @@ ZMQMessage ZMQMessage::fromError(
 	return msg;
 }
 
+ZMQMessage ZMQMessage::fromHelloRequest(const DevicePrefix &devicePrefix)
+{
+	ZMQMessage msg;
+
+	msg.setType(ZMQMessageType::fromRaw(
+		ZMQMessageType::TYPE_HELLO_REQUEST));
+	msg.setDeviceManagerPrefix(devicePrefix);
+
+	return msg;
+}
+
 ZMQMessage ZMQMessage::fromJSON(const string &json)
 {
 	return ZMQMessage(JsonUtil::parse(json));
@@ -74,4 +96,9 @@ ZMQMessage ZMQMessage::fromJSON(const string &json)
 ZMQMessageError ZMQMessage::toError()
 {
 	return ZMQMessageError(getErrorCode(), getErrorMessage());
+}
+
+DevicePrefix ZMQMessage::toHelloRequest()
+{
+	return getDevicePrefix(m_json);
 }

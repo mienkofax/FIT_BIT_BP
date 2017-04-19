@@ -30,6 +30,9 @@ void ZMQClient::run()
 {
 	configureHelloSockets();
 
+	ZMQMessage helloRequest = ZMQMessage::fromHelloRequest(m_devicePrefix);
+	ZMQUtil::send(m_helloServerSocket, helloRequest.toString());
+
 	while (!m_stop) {
 		if (!m_deviceMangerID.isNull()) {
 			configureDataSockets();
