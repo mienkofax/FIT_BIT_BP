@@ -12,6 +12,8 @@ namespace BeeeOn {
 class ZMQMessageError {
 public:
 	enum Error {
+		ERROR_JSON_SYNTAX,
+		ERROR_MISSING_ATTRIBUTE,
 		ERROR_UNSUPPORTED_MESSAGE,
 	};
 
