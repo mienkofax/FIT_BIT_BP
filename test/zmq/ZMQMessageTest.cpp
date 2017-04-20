@@ -4,6 +4,7 @@
 #include <Poco/JSON/Object.h>
 #include <Poco/JSON/Parser.h>
 
+#include "model/SensorData.h"
 #include "util/JsonUtil.h"
 #include "zmq/ZMQMessage.h"
 
@@ -19,6 +20,7 @@ class ZMQMessageTest : public CppUnit::TestFixture {
 	CPPUNIT_TEST(testErrorMessage);
 	CPPUNIT_TEST(testHelloRequest);
 	CPPUNIT_TEST(testHelloResponse);
+	CPPUNIT_TEST(testMeasuredValues);
 	CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -26,6 +28,7 @@ public:
 	void testErrorMessage();
 	void testHelloRequest();
 	void testHelloResponse();
+	void testMeasuredValues();
 
 private:
 	std::string toPocoJSON(const std::string &json);
@@ -131,6 +134,45 @@ void ZMQMessageTest::testHelloResponse()
 
 	DeviceManagerID helloResponse = message.toHelloResponse();
 	CPPUNIT_ASSERT_EQUAL(helloResponse, deviceManagerID);
+}
+
+void ZMQMessageTest::testMeasuredValues()
+{
+	string jsonMessage = R"(
+		{
+			"device_id" : "0xfe01020304050607",
+			"message_type" : "measured_values",
+			"values" : [
+				{
+					"module_id" : "0",
+					"raw" : "123.500000",
+					"type" : "double"
+				},
+				{
+					"module_id" : "1",
+					"raw" : "-59.400000",
+					"type" : "double"
+				}
+			]
+		}
+	)";
+	Timestamp now;
+	SensorData testSensorData;
+
+	testSensorData.setDeviceID(DeviceID(0xfe01020304050607));
+	testSensorData.insertValue(SensorValue(ModuleID(0), 123.5));
+	testSensorData.insertValue(SensorValue(ModuleID(1), -59.4));
+	testSensorData.setTimestamp(now);
+
+	ZMQMessage message = ZMQMessage::fromSensorData(testSensorData);
+
+	CPPUNIT_ASSERT(toPocoJSON(jsonMessage) == message.toString());
+	CPPUNIT_ASSERT(message.type() == ZMQMessageType::TYPE_MEASURED_VALUES);
+
+	SensorData sensorData = message.toSensorData();
+	sensorData.setTimestamp(now);
+
+	CPPUNIT_ASSERT(testSensorData == sensorData);
 }
 
 }

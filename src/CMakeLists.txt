@@ -45,6 +45,7 @@ file(GLOB SOURCES
 	${PROJECT_SOURCE_DIR}/zmq/ZMQDeviceManagerTable.cpp
 	${PROJECT_SOURCE_DIR}/zmq/ZMQMessage.cpp
 	${PROJECT_SOURCE_DIR}/zmq/ZMQMessageError.cpp
+	${PROJECT_SOURCE_DIR}/zmq/ZMQMessageValueType.cpp
 	${PROJECT_SOURCE_DIR}/zmq/ZMQMessageType.cpp
 )
 

@@ -39,12 +39,32 @@ namespace BeeeOn {
  *     "message_type" : "hello_response",
  *     "device_manager_id" : "0xa100"
  * }
+ *
+ * 4. message_type: measured_values
+ *
+ * Psrava s nameranymi hodnota zo zariadenia. Pre identifikaciu
+ * zariadenia, s ktoreho bola odoslana sa pouziva device_id.
+ * Jednotlive hodnoty su reprezentovane modulom, ktory nameral hodnotu
+ * nameranou hodnotou a typom nameranej hodnoty.
+ *
+ * {
+ *     "message_type" : "measured_values",
+ *     "device_id" : "0x132465789",
+ *     "values" : [
+ *         {
+ *             "raw" : "103.5",
+ *             "type" : "double",
+ *             "module_id" : "0"
+ *         }
+ *     ]
+ * }
  */
 struct ZMQMessageTypeEnum {
 	enum Raw {
 		TYPE_ERROR,
 		TYPE_HELLO_RESPONSE,
 		TYPE_HELLO_REQUEST,
+		TYPE_MEASURED_VALUES,
 	};
 
 	static EnumHelper<Raw>::ValueMap &valueMap();

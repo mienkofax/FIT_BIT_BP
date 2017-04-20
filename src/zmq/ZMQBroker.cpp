@@ -2,6 +2,7 @@
 
 #include "di/Injectable.h"
 #include "model/DeviceManagerID.h"
+#include "model/SensorData.h"
 #include "util/ZMQUtil.h"
 #include "zmq/ZMQBroker.h"
 #include "zmq/ZMQMessage.h"
@@ -176,6 +177,9 @@ void ZMQBroker::handleDataMessage(ZMQMessage &zmqMessage,
 		const DeviceManagerID &deviceManagerID)
 {
 	switch (zmqMessage.type().raw()) {
+	case ZMQMessageType::TYPE_MEASURED_VALUES:
+		m_distributor->exportData(zmqMessage.toSensorData());
+		break;
 	default:
 		sendError(
 			ZMQMessageError::ERROR_UNSUPPORTED_MESSAGE,

@@ -9,8 +9,14 @@
 #include "model/DevicePrefix.h"
 #include "zmq/ZMQMessageError.h"
 #include "zmq/ZMQMessageType.h"
+#include "zmq/ZMQMessageValueType.h"
 
 namespace BeeeOn {
+
+class DeviceID;
+class ModuleID;
+class SensorData;
+class SensorValue;
 
 /*
  * The class represents messages which send or receive using zmq.
@@ -56,10 +62,14 @@ public:
 
 	DeviceManagerID toHelloResponse();
 
+	SensorData toSensorData();
+
 	/*
 	 * Parses json message and store into Poco::JSON::Object (m_json).
 	 */
 	static ZMQMessage fromJSON(const std::string &json);
+
+	static ZMQMessage fromSensorData(const SensorData &sensorData);
 
 	/*
 	 * It is a response to an unknown message/attribute.
@@ -72,6 +82,8 @@ public:
 	static ZMQMessage fromHelloResponse(const DeviceManagerID &deviceManagerID);
 
 private:
+	Poco::JSON::Object::Ptr jsonObject() const;
+
 	/*
 	 * Creates message from parsed json message.
 	 */
@@ -114,6 +126,60 @@ private:
 	 * }
 	 */
 	void setDeviceManagerID(const DeviceManagerID &deviceManagerID);
+
+	/*
+	 * {
+	 *     "device_id" : "0x12345678945"
+	 * }
+	 */
+	void setDeviceID(Poco::JSON::Object::Ptr jsonObject,
+		const DeviceID &deviceID);
+	DeviceID getDeviceID(Poco::JSON::Object::Ptr jsonObject);
+
+	/*
+	 * {
+	 *     "module_id" : 0
+	 * }
+	 */
+	void setModuleID(Poco::JSON::Object::Ptr jsonObject,
+		const ModuleID &moduleID);
+	ModuleID getModuleID(Poco::JSON::Object::Ptr jsonObject);
+
+	/*
+	 * {
+	 *     "raw:" : "103.5"
+	 * }
+	 */
+	void setRawValue(Poco::JSON::Object::Ptr jsonObject,
+		const std::string &value);
+	std::string getRawValue(Poco::JSON::Object::Ptr jsonObject);
+
+	/*
+	 * {
+	 *     "type" : "double"
+	 * }
+	 */
+	void setRawValueType(Poco::JSON::Object::Ptr jsonObject,
+		const ZMQMessageValueType &valueType);
+	ZMQMessageValueType getRawValueType(Poco::JSON::Object::Ptr jsonObject);
+
+	/*
+	 * True ak je raw hodnota daneho typu.
+	 *
+	 * {
+	 *     "raw:" : "103.5",
+	 *     "type" : "double"
+	 * }
+	 */
+	void setValue(Poco::JSON::Object::Ptr jsonObject, const double value);
+	bool getValue(Poco::JSON::Object::Ptr jsonObject, double &value);
+
+	/*
+	 * SensorValue
+	 */
+	void setSensorValue(Poco::JSON::Object::Ptr jsonObject,
+		const SensorValue &sensorValue);
+	SensorValue getSensorValue(Poco::JSON::Object::Ptr jsonObject);
 
 private:
 	Poco::JSON::Object::Ptr m_json;
