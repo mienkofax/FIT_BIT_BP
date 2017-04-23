@@ -5,11 +5,15 @@
 
 #include <Poco/JSON/Object.h>
 
+#include "core/Command.h"
 #include "model/DeviceManagerID.h"
 #include "model/DevicePrefix.h"
+#include "model/GlobalID.h"
 #include "zmq/ZMQMessageError.h"
 #include "zmq/ZMQMessageType.h"
 #include "zmq/ZMQMessageValueType.h"
+
+#include "commands/GatewayListenCommand.h"
 
 namespace BeeeOn {
 
@@ -54,6 +58,14 @@ public:
 	 */
 	ZMQMessageType type() const;
 
+	/*
+	 * {
+	 *     "id" : "3feca65f-fdfc-4189-ad9d-0be68e13ef5d"
+	 * }
+	 */
+	GlobalID id();
+	void setID(const GlobalID &id);
+
 	std::string toString() const;
 
 	ZMQMessageError toError();
@@ -63,6 +75,8 @@ public:
 	DeviceManagerID toHelloResponse();
 
 	SensorData toSensorData();
+
+	GatewayListenCommand::Ptr toGatewayListenCommand();
 
 	/*
 	 * Parses json message and store into Poco::JSON::Object (m_json).
@@ -81,8 +95,12 @@ public:
 
 	static ZMQMessage fromHelloResponse(const DeviceManagerID &deviceManagerID);
 
+	static ZMQMessage fromCommand(const Command::Ptr cmd);
+
 private:
 	Poco::JSON::Object::Ptr jsonObject() const;
+
+	static ZMQMessage fromGatewayListenCommand(const GatewayListenCommand::Ptr cmd);
 
 	/*
 	 * Creates message from parsed json message.
@@ -180,6 +198,14 @@ private:
 	void setSensorValue(Poco::JSON::Object::Ptr jsonObject,
 		const SensorValue &sensorValue);
 	SensorValue getSensorValue(Poco::JSON::Object::Ptr jsonObject);
+
+	/*
+	 * {
+	 *     "type" : "double"
+	 * }
+	 */
+	void setDuration(const Poco::Timespan &duration);
+	Poco::Timespan getDuration();
 
 private:
 	Poco::JSON::Object::Ptr m_json;

@@ -4,9 +4,11 @@
 #include <Poco/JSON/Object.h>
 #include <Poco/JSON/Parser.h>
 
+#include "commands/GatewayListenCommand.h"
 #include "model/SensorData.h"
 #include "util/JsonUtil.h"
 #include "zmq/ZMQMessage.h"
+#include "model/GlobalID.h"
 
 using namespace Poco;
 using namespace Poco::JSON;
@@ -21,6 +23,7 @@ class ZMQMessageTest : public CppUnit::TestFixture {
 	CPPUNIT_TEST(testHelloRequest);
 	CPPUNIT_TEST(testHelloResponse);
 	CPPUNIT_TEST(testMeasuredValues);
+	CPPUNIT_TEST(testGatewayListenCommand);
 	CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -29,6 +32,7 @@ public:
 	void testHelloRequest();
 	void testHelloResponse();
 	void testMeasuredValues();
+	void testGatewayListenCommand();
 
 private:
 	std::string toPocoJSON(const std::string &json);
@@ -173,6 +177,29 @@ void ZMQMessageTest::testMeasuredValues()
 	sensorData.setTimestamp(now);
 
 	CPPUNIT_ASSERT(testSensorData == sensorData);
+}
+
+void ZMQMessageTest::testGatewayListenCommand()
+{
+	Timespan duration(60*Timespan::SECONDS);
+	string jsonMessage = R"(
+		{
+			"message_type" : "listen_cmd",
+			"duration" : 60,
+			"id" : "3feca65f-fdfc-4189-ad9d-0be68e13ef5d"
+		}
+	)";
+
+	GatewayListenCommand::Ptr listen = new GatewayListenCommand(duration);
+	ZMQMessage message = ZMQMessage::fromCommand(listen);
+	message.setID(GlobalID::parse("3feca65f-fdfc-4189-ad9d-0be68e13ef5d"));
+
+	CPPUNIT_ASSERT(toPocoJSON(jsonMessage) == message.toString());
+	CPPUNIT_ASSERT("3feca65f-fdfc-4189-ad9d-0be68e13ef5d" == message.id().toString());
+	CPPUNIT_ASSERT(message.type() == ZMQMessageType::TYPE_LISTEN_CMD);
+
+	GatewayListenCommand::Ptr cmd = message.toGatewayListenCommand();
+	CPPUNIT_ASSERT(cmd->duration() == duration);
 }
 
 }

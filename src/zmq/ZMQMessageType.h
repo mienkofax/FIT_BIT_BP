@@ -58,12 +58,23 @@ namespace BeeeOn {
  *         }
  *     ]
  * }
+ *
+ * 5. message_type: listen_cmd
+ *
+ * Sprava po ktorej sa zapne parovaci rezim. Parovaci rezim je urceny
+ * pre prijimanie sprav od novych zariadeni.
+ *
+ * {
+ *     "message_type" : "listen_cmd",
+ *     "duration" : 60
+ * }
  */
 struct ZMQMessageTypeEnum {
 	enum Raw {
 		TYPE_ERROR,
 		TYPE_HELLO_RESPONSE,
 		TYPE_HELLO_REQUEST,
+		TYPE_LISTEN_CMD,
 		TYPE_MEASURED_VALUES,
 	};
 

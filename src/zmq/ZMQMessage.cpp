@@ -102,6 +102,16 @@ void ZMQMessage::setSensorValue(Object::Ptr jsonObject,
 	setValue(jsonObject, sensorValue.value());
 }
 
+void ZMQMessage::setDuration(const Poco::Timespan &duration)
+{
+	m_json->set("duration", duration.totalSeconds());
+}
+
+void ZMQMessage::setID(const GlobalID &id)
+{
+	m_json->set("id", id.toString());
+}
+
 ZMQMessageError::Error ZMQMessage::getErrorCode()
 {
 	return static_cast<ZMQMessageError::Error>(
@@ -164,6 +174,17 @@ SensorValue ZMQMessage::getSensorValue(Object::Ptr jsonObject)
 	return SensorValue(moduleId, raw);
 }
 
+Timespan ZMQMessage::getDuration()
+{
+	return Timespan(Timespan::SECONDS
+		* JsonUtil::extract<int>(m_json, "duration"));
+}
+
+GlobalID ZMQMessage::id()
+{
+	return GlobalID::parse(JsonUtil::extract<string>(m_json, "id"));
+}
+
 ZMQMessage ZMQMessage::fromError(
 	const ZMQMessageError::Error error, const std::string &message)
 {
@@ -221,6 +242,29 @@ ZMQMessage ZMQMessage::fromSensorData(const SensorData &sensorData)
 	return msg;
 }
 
+ZMQMessage ZMQMessage::fromCommand(const Command::Ptr cmd)
+{
+	if (cmd->is<GatewayListenCommand>()) {
+		return fromGatewayListenCommand(cmd.cast<GatewayListenCommand>());
+	}
+	else {
+		throw Poco::ExistsException("unsupported command: "
+			+ cmd->name());
+	}
+}
+
+ZMQMessage ZMQMessage::fromGatewayListenCommand(const GatewayListenCommand::Ptr cmd)
+{
+	ZMQMessage msg;
+
+	msg.setType(ZMQMessageType::fromRaw(
+		ZMQMessageType::TYPE_LISTEN_CMD));
+	msg.setID(GlobalID::random());
+	msg.setDuration(cmd->duration());
+
+	return msg;
+}
+
 ZMQMessage ZMQMessage::fromJSON(const string &json)
 {
 	return ZMQMessage(JsonUtil::parse(json));
@@ -252,4 +296,9 @@ SensorData ZMQMessage::toSensorData()
 		sensorData.insertValue(getSensorValue(jsonArray->getObject(i)));
 
 	return sensorData;
+}
+
+GatewayListenCommand::Ptr ZMQMessage::toGatewayListenCommand()
+{
+	return new GatewayListenCommand(getDuration());
 }
