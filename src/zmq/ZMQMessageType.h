@@ -77,6 +77,21 @@ namespace BeeeOn {
  *     "message_type" : "default_result",
  *     "result_status" : 0
  * }
+ *
+ * 7. message_type: set_values_cmd
+ *
+ * Sprava pre nastavenie hodnot na konkretne zariadenie.
+ *
+ * {
+ *     "message_type" : "set_values_cmd",
+ *     "device_id" : "0x132465789",
+ *     "timeout" : 60,
+ *     "values" : {
+ *         "raw" : "103.5",
+ *         "type" : "double",
+ *         "module_id" : "0"
+ *      }
+ * }
  */
 struct ZMQMessageTypeEnum {
 	enum Raw {
@@ -86,6 +101,7 @@ struct ZMQMessageTypeEnum {
 		TYPE_HELLO_REQUEST,
 		TYPE_LISTEN_CMD,
 		TYPE_MEASURED_VALUES,
+		TYPE_SET_VALUES_CMD,
 	};
 
 	static EnumHelper<Raw>::ValueMap &valueMap();

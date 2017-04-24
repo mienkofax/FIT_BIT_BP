@@ -117,6 +117,11 @@ void ZMQMessage::setResultState(Result::Status resultState)
 	m_json->set("result_status", (int) resultState);
 }
 
+void ZMQMessage::setTimeout(const Poco::Timespan &timeout)
+{
+	m_json->set("timeout", timeout.totalSeconds());
+}
+
 ZMQMessageError::Error ZMQMessage::getErrorCode()
 {
 	return static_cast<ZMQMessageError::Error>(
@@ -196,6 +201,12 @@ Result::Status ZMQMessage::getResultState()
 		JsonUtil::extract<int>(m_json, "result_status"));
 }
 
+Poco::Timespan ZMQMessage::getTimeout(Poco::JSON::Object::Ptr jsonObject)
+{
+	return Timespan(Timespan::SECONDS
+		* JsonUtil::extract<int>(jsonObject, "timeout"));
+}
+
 ZMQMessage ZMQMessage::fromError(
 	const ZMQMessageError::Error error, const std::string &message)
 {
@@ -258,6 +269,9 @@ ZMQMessage ZMQMessage::fromCommand(const Command::Ptr cmd)
 	if (cmd->is<GatewayListenCommand>()) {
 		return fromGatewayListenCommand(cmd.cast<GatewayListenCommand>());
 	}
+	else if (cmd->is<DeviceSetValueCommand>()) {
+		return fromDeviceSetValueCommand(cmd.cast<DeviceSetValueCommand>());
+	}
 	else {
 		throw Poco::ExistsException("unsupported command: "
 			+ cmd->name());
@@ -293,6 +307,24 @@ ZMQMessage ZMQMessage::fromDefaultResult(const Result::Ptr result)
 	msg.setType(ZMQMessageType::fromRaw(
 		ZMQMessageType::TYPE_DEFAULT_RESULT	));
 	msg.setResultState(result->status());
+
+	return msg;
+}
+
+ZMQMessage ZMQMessage::fromDeviceSetValueCommand(const DeviceSetValueCommand::Ptr cmd)
+{
+	Object::Ptr values = new Object();
+	ZMQMessage msg;
+
+	msg.setType(ZMQMessageType::fromRaw(
+		ZMQMessageType::TYPE_SET_VALUES_CMD));
+
+	msg.setTimeout(cmd->timeout());
+	msg.setValue(values, cmd->value());
+	msg.setModuleID(values, cmd->moduleID());
+	msg.setDeviceID(msg.jsonObject(), cmd->deviceID());
+
+	msg.jsonObject()->set("values", values);
 
 	return msg;
 }
@@ -338,4 +370,20 @@ GatewayListenCommand::Ptr ZMQMessage::toGatewayListenCommand()
 void ZMQMessage::toDefaultResult(Result::Ptr result)
 {
 	result->setStatus(getResultState());
+}
+
+DeviceSetValueCommand::Ptr ZMQMessage::toDeviceSetValueCommand()
+{
+	Object::Ptr jsonObject = m_json->getObject("values");
+	double raw;
+
+	if (!getValue(jsonObject, raw))
+		throw InvalidArgumentException("invalid set message");
+
+	return new DeviceSetValueCommand(
+		getDeviceID(m_json),
+		getModuleID(jsonObject),
+		raw,
+		getTimeout(m_json)
+	);
 }

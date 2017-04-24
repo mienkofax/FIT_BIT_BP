@@ -16,6 +16,7 @@
 #include "zmq/ZMQMessageValueType.h"
 
 #include "commands/GatewayListenCommand.h"
+#include "commands/DeviceSetValueCommand.h"
 
 namespace BeeeOn {
 
@@ -82,6 +83,8 @@ public:
 
 	void toDefaultResult(Result::Ptr result);
 
+	DeviceSetValueCommand::Ptr toDeviceSetValueCommand();
+
 	/*
 	 * Parses json message and store into Poco::JSON::Object (m_json).
 	 */
@@ -109,6 +112,8 @@ private:
 	static ZMQMessage fromGatewayListenCommand(const GatewayListenCommand::Ptr cmd);
 
 	static ZMQMessage fromDefaultResult(const Result::Ptr result);
+
+	static ZMQMessage fromDeviceSetValueCommand(const DeviceSetValueCommand::Ptr cmd);
 
 	/*
 	 * Creates message from parsed json message.
@@ -222,6 +227,13 @@ private:
 	 */
 	void setResultState(Result::Status resultState);
 	Result::Status getResultState();
+
+	/*
+	 *     "timeout" : 60
+	 * }
+	 */
+	void setTimeout(const Poco::Timespan &timeout);
+	Poco::Timespan getTimeout(Poco::JSON::Object::Ptr jsonObject);
 
 private:
 	Poco::JSON::Object::Ptr m_json;

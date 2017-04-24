@@ -11,6 +11,7 @@ EnumHelper<ZMQMessageTypeEnum::Raw>::ValueMap &ZMQMessageTypeEnum::valueMap()
 		{ZMQMessageTypeEnum::TYPE_HELLO_REQUEST, "hello_request"},
 		{ZMQMessageTypeEnum::TYPE_LISTEN_CMD, "listen_cmd"},
 		{ZMQMessageTypeEnum::TYPE_MEASURED_VALUES, "measured_values"},
+		{ZMQMessageTypeEnum::TYPE_SET_VALUES_CMD, "set_values_cmd"},
 	};
 
 	return valueMap;

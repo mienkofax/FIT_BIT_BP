@@ -4,6 +4,7 @@
 #include <Poco/JSON/Object.h>
 #include <Poco/JSON/Parser.h>
 
+#include "commands/DeviceSetValueCommand.h"
 #include "commands/GatewayListenCommand.h"
 #include "core/AnswerQueue.h"
 #include "model/SensorData.h"
@@ -26,6 +27,7 @@ class ZMQMessageTest : public CppUnit::TestFixture {
 	CPPUNIT_TEST(testMeasuredValues);
 	CPPUNIT_TEST(testGatewayListenCommand);
 	CPPUNIT_TEST(testDefaultResult);
+	CPPUNIT_TEST(testDeviceSetValueCommand);
 	CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -36,6 +38,7 @@ public:
 	void testMeasuredValues();
 	void testGatewayListenCommand();
 	void testDefaultResult();
+	void testDeviceSetValueCommand();
 
 private:
 	std::string toPocoJSON(const std::string &json);
@@ -227,6 +230,41 @@ void ZMQMessageTest::testDefaultResult()
 
 	message.toDefaultResult(result);
 	CPPUNIT_ASSERT(result->status() == static_cast<Result::Status>(0));
+}
+
+void ZMQMessageTest::testDeviceSetValueCommand()
+{
+	string jsonMessage = R"(
+		{
+			"device_id" : "0xfe01020304050607",
+			"message_type" : "set_values_cmd",
+			"id" : "3feca65f-fdfc-4189-ad9d-0be68e13ef5d",
+			"timeout" : 60,
+			"values" : {
+					"module_id" : "0",
+					"raw" : "123.500000",
+					"type" : "double"
+			}
+		}
+	)";
+
+	DeviceSetValueCommand::Ptr set = new DeviceSetValueCommand(
+		DeviceID(0xfe01020304050607),
+		ModuleID(0),
+		123.5,
+		Timespan::SECONDS * 60);
+
+	ZMQMessage message = ZMQMessage::fromCommand(set);
+	message.setID(GlobalID::parse("3feca65f-fdfc-4189-ad9d-0be68e13ef5d"));
+
+	CPPUNIT_ASSERT(toPocoJSON(jsonMessage) == message.toString());
+	CPPUNIT_ASSERT(message.type() == ZMQMessageType::TYPE_SET_VALUES_CMD);
+
+	DeviceSetValueCommand::Ptr cmd = message.toDeviceSetValueCommand();
+	CPPUNIT_ASSERT(cmd->deviceID() == DeviceID(0xfe01020304050607));
+	CPPUNIT_ASSERT(cmd->timeout().totalSeconds() == 60);
+	CPPUNIT_ASSERT(cmd->moduleID() == ModuleID(0));
+	CPPUNIT_ASSERT(cmd->value() == 123.5);
 }
 
 }
