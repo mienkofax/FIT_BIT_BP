@@ -19,6 +19,8 @@
 #include "commands/DeviceSetValueCommand.h"
 #include "commands/ServerDeviceListCommand.h"
 
+#include "commands/ServerDeviceListResult.h"
+
 namespace BeeeOn {
 
 class DeviceID;
@@ -88,6 +90,7 @@ public:
 
 	ServerDeviceListCommand::Ptr toDeviceListRequest();
 
+	void toServerDeviceListResult(ServerDeviceListResult::Ptr result);
 	/*
 	 * Parses json message and store into Poco::JSON::Object (m_json).
 	 */
@@ -120,6 +123,9 @@ private:
 
 	static ZMQMessage fromServerDeviceListCommand(
 		const ServerDeviceListCommand::Ptr cmd);
+
+	static ZMQMessage fromServerDeviceListResult(
+		const ServerDeviceListResult::Ptr result);
 
 	/*
 	 * Creates message from parsed json message.

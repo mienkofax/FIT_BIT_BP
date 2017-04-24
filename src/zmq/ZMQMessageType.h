@@ -102,12 +102,26 @@ namespace BeeeOn {
  *     "device_manager_prefix" : "Fitprotocol"
  * }
  *
+ * 9. message_type: device_list_result
+ *
+ * Odpoved na poziadavku na zoznam naparovanych zariadeni.
+ *
+ * {
+ *     "message_type" : "device_list_result",
+ *     "result_status" : 0
+ *     "devices" : [
+ *         "device_id" : "0x132465789",
+ *         "device_id" : "0x132465789"
+ *     ]
+ * }
+ *
  */
 struct ZMQMessageTypeEnum {
 	enum Raw {
 		TYPE_ERROR,
 		TYPE_DEFAULT_RESULT,
 		TYPE_DEVICE_LIST_CMD,
+		TYPE_DEVICE_LIST_RESULT,
 		TYPE_HELLO_RESPONSE,
 		TYPE_HELLO_REQUEST,
 		TYPE_LISTEN_CMD,

@@ -29,6 +29,7 @@ class ZMQMessageTest : public CppUnit::TestFixture {
 	CPPUNIT_TEST(testDefaultResult);
 	CPPUNIT_TEST(testDeviceSetValueCommand);
 	CPPUNIT_TEST(testDeviceListCommand);
+	CPPUNIT_TEST(testDeviceListResult);
 	CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -41,6 +42,7 @@ public:
 	void testDefaultResult();
 	void testDeviceSetValueCommand();
 	void testDeviceListCommand();
+	void testDeviceListResult();
 
 private:
 	std::string toPocoJSON(const std::string &json);
@@ -292,6 +294,49 @@ void ZMQMessageTest::testDeviceListCommand()
 	CPPUNIT_ASSERT_EQUAL(
 		cmd->devicePrefix(),
 		DevicePrefix::fromRaw(DevicePrefix::PREFIX_FITPROTOCOL));
+}
+
+void ZMQMessageTest::testDeviceListResult()
+{
+	string jsonMessage = R"(
+		{
+			"device_list" : [
+				{
+					"device_id" : "0xfe01020304050607"
+				},
+				{
+					"device_id" : "0xfe01020304050608"
+				},
+				{
+					"device_id" : "0xfe01020304050609"
+				}
+			],
+			"result_status" : 0,
+			"message_type" : "device_list_result",
+			"id" : "3feca65f-fdfc-4189-ad9d-0be68e13ef5d"
+		}
+	)";
+
+	vector<DeviceID> devices = {
+		DeviceID(0xfe01020304050607),
+		DeviceID(0xfe01020304050608),
+		DeviceID(0xfe01020304050609),
+	};
+
+	AnswerQueue queue;
+	Answer::Ptr answer = new Answer(queue);
+	ServerDeviceListResult::Ptr result = new ServerDeviceListResult(answer);
+	result->setDeviceList(devices);
+
+	ZMQMessage message = ZMQMessage::fromResult(result);
+	message.setID(GlobalID::parse("3feca65f-fdfc-4189-ad9d-0be68e13ef5d"));
+	
+	CPPUNIT_ASSERT(toPocoJSON(jsonMessage) == message.toString());
+	CPPUNIT_ASSERT(message.type() == ZMQMessageType::TYPE_DEVICE_LIST_RESULT);
+
+	message.toServerDeviceListResult(result);
+	CPPUNIT_ASSERT(result->status() == static_cast<Result::Status>(0));
+	CPPUNIT_ASSERT(result->deviceList() == devices);
 }
 
 }

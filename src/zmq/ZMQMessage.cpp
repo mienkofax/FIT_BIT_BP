@@ -298,6 +298,9 @@ ZMQMessage ZMQMessage::fromResult(const Result::Ptr result)
 	if (result->is<Result>()) {
 		return fromDefaultResult(result.cast<Result>());
 	}
+	else if (result->is<ServerDeviceListResult>()) {
+		return fromServerDeviceListResult(result.cast<ServerDeviceListResult>());
+	}
 	else {
 		throw Poco::ExistsException("unsupported result");
 	}
@@ -340,6 +343,28 @@ ZMQMessage ZMQMessage::fromServerDeviceListCommand(
 	msg.setType(ZMQMessageType::fromRaw(
 		ZMQMessageType::TYPE_DEVICE_LIST_CMD));
 	msg.setDeviceManagerPrefix(cmd->devicePrefix());
+
+	return msg;
+}
+
+ZMQMessage ZMQMessage::fromServerDeviceListResult(const ServerDeviceListResult::Ptr result)
+{
+	ZMQMessage msg;
+
+	Object::Ptr json = msg.jsonObject();
+	Array::Ptr jsonArray = new Array();
+
+	msg.setType(ZMQMessageType::fromRaw(
+		ZMQMessageType::TYPE_DEVICE_LIST_RESULT));
+	msg.setResultState(result->status());
+
+	for (auto item : result->deviceList()) {
+		Object::Ptr arrayItem = new Object();
+		msg.setDeviceID(arrayItem, item);
+		jsonArray->add(Dynamic::Var(arrayItem));
+	}
+
+	json->set("device_list", jsonArray);
 
 	return msg;
 }
@@ -407,4 +432,16 @@ ServerDeviceListCommand::Ptr ZMQMessage::toDeviceListRequest()
 {
 	return new ServerDeviceListCommand(DevicePrefix::parse(
 		JsonUtil::extract<std::string>((m_json), "device_manager_prefix")));
+}
+
+void ZMQMessage::toServerDeviceListResult(ServerDeviceListResult::Ptr result)
+{
+	vector<DeviceID> deviceList;
+
+	Array::Ptr jsonArray = m_json->getArray("device_list");
+	for (size_t i = 0; i < jsonArray->size(); ++i)
+		deviceList.push_back(getDeviceID(jsonArray->getObject(i)));
+
+	result->setStatus(getResultState());
+	result->setDeviceList(deviceList);
 }
