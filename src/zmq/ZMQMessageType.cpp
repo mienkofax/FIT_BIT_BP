@@ -7,6 +7,7 @@ EnumHelper<ZMQMessageTypeEnum::Raw>::ValueMap &ZMQMessageTypeEnum::valueMap()
 	static EnumHelper<ZMQMessageTypeEnum::Raw>::ValueMap valueMap = {
 		{ZMQMessageTypeEnum::TYPE_ERROR, "error"},
 		{ZMQMessageTypeEnum::TYPE_DEFAULT_RESULT, "default_result"},
+		{ZMQMessageTypeEnum::TYPE_DEVICE_LIST_CMD, "device_list_cmd"},
 		{ZMQMessageTypeEnum::TYPE_HELLO_RESPONSE, "hello_response"},
 		{ZMQMessageTypeEnum::TYPE_HELLO_REQUEST, "hello_request"},
 		{ZMQMessageTypeEnum::TYPE_LISTEN_CMD, "listen_cmd"},

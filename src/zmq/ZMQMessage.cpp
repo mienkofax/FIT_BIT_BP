@@ -272,6 +272,9 @@ ZMQMessage ZMQMessage::fromCommand(const Command::Ptr cmd)
 	else if (cmd->is<DeviceSetValueCommand>()) {
 		return fromDeviceSetValueCommand(cmd.cast<DeviceSetValueCommand>());
 	}
+	else if (cmd->is<ServerDeviceListCommand>()) {
+		return fromServerDeviceListCommand(cmd.cast<ServerDeviceListCommand>());
+	}
 	else {
 		throw Poco::ExistsException("unsupported command: "
 			+ cmd->name());
@@ -325,6 +328,18 @@ ZMQMessage ZMQMessage::fromDeviceSetValueCommand(const DeviceSetValueCommand::Pt
 	msg.setDeviceID(msg.jsonObject(), cmd->deviceID());
 
 	msg.jsonObject()->set("values", values);
+
+	return msg;
+}
+
+ZMQMessage ZMQMessage::fromServerDeviceListCommand(
+	const ServerDeviceListCommand::Ptr cmd)
+{
+	ZMQMessage msg;
+
+	msg.setType(ZMQMessageType::fromRaw(
+		ZMQMessageType::TYPE_DEVICE_LIST_CMD));
+	msg.setDeviceManagerPrefix(cmd->devicePrefix());
 
 	return msg;
 }
@@ -386,4 +401,10 @@ DeviceSetValueCommand::Ptr ZMQMessage::toDeviceSetValueCommand()
 		raw,
 		getTimeout(m_json)
 	);
+}
+
+ServerDeviceListCommand::Ptr ZMQMessage::toDeviceListRequest()
+{
+	return new ServerDeviceListCommand(DevicePrefix::parse(
+		JsonUtil::extract<std::string>((m_json), "device_manager_prefix")));
 }

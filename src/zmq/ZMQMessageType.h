@@ -92,11 +92,22 @@ namespace BeeeOn {
  *         "module_id" : "0"
  *      }
  * }
+ *
+ * 8. message_type: device_list_cmd
+ *
+ * Poziadavka na zoznam naparovanych zariadeni na danom device manageri.
+ *
+ * {
+ *     "message_type" : "device_list_cmd",
+ *     "device_manager_prefix" : "Fitprotocol"
+ * }
+ *
  */
 struct ZMQMessageTypeEnum {
 	enum Raw {
 		TYPE_ERROR,
 		TYPE_DEFAULT_RESULT,
+		TYPE_DEVICE_LIST_CMD,
 		TYPE_HELLO_RESPONSE,
 		TYPE_HELLO_REQUEST,
 		TYPE_LISTEN_CMD,

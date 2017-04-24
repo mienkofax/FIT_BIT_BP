@@ -28,6 +28,7 @@ class ZMQMessageTest : public CppUnit::TestFixture {
 	CPPUNIT_TEST(testGatewayListenCommand);
 	CPPUNIT_TEST(testDefaultResult);
 	CPPUNIT_TEST(testDeviceSetValueCommand);
+	CPPUNIT_TEST(testDeviceListCommand);
 	CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -39,6 +40,7 @@ public:
 	void testGatewayListenCommand();
 	void testDefaultResult();
 	void testDeviceSetValueCommand();
+	void testDeviceListCommand();
 
 private:
 	std::string toPocoJSON(const std::string &json);
@@ -265,6 +267,31 @@ void ZMQMessageTest::testDeviceSetValueCommand()
 	CPPUNIT_ASSERT(cmd->timeout().totalSeconds() == 60);
 	CPPUNIT_ASSERT(cmd->moduleID() == ModuleID(0));
 	CPPUNIT_ASSERT(cmd->value() == 123.5);
+}
+
+void ZMQMessageTest::testDeviceListCommand()
+{
+	string jsonMessage = R"(
+		{
+			"message_type" : "device_list_cmd",
+			"id" : "3feca65f-fdfc-4189-ad9d-0be68e13ef5d",
+			"device_manager_prefix" : "Fitprotocol"
+		}
+	)";
+
+	ServerDeviceListCommand::Ptr deviecList = new ServerDeviceListCommand(
+		DevicePrefix::fromRaw(DevicePrefix::PREFIX_FITPROTOCOL));
+
+	ZMQMessage message = ZMQMessage::fromCommand(deviecList);
+	message.setID(GlobalID::parse("3feca65f-fdfc-4189-ad9d-0be68e13ef5d"));
+
+	CPPUNIT_ASSERT(toPocoJSON(jsonMessage) == message.toString());
+	CPPUNIT_ASSERT(message.type() == ZMQMessageType::TYPE_DEVICE_LIST_CMD);
+
+	ServerDeviceListCommand::Ptr cmd = message.toDeviceListRequest();
+	CPPUNIT_ASSERT_EQUAL(
+		cmd->devicePrefix(),
+		DevicePrefix::fromRaw(DevicePrefix::PREFIX_FITPROTOCOL));
 }
 
 }
