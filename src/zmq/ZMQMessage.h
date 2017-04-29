@@ -18,6 +18,7 @@
 #include "commands/GatewayListenCommand.h"
 #include "commands/DeviceSetValueCommand.h"
 #include "commands/ServerDeviceListCommand.h"
+#include "commands/ServerLastValueCommand.h"
 
 #include "commands/ServerDeviceListResult.h"
 
@@ -91,6 +92,8 @@ public:
 	ServerDeviceListCommand::Ptr toDeviceListRequest();
 
 	void toServerDeviceListResult(ServerDeviceListResult::Ptr result);
+
+	ServerLastValueCommand::Ptr toServerLastValueCommand();
 	/*
 	 * Parses json message and store into Poco::JSON::Object (m_json).
 	 */
@@ -126,6 +129,9 @@ private:
 
 	static ZMQMessage fromServerDeviceListResult(
 		const ServerDeviceListResult::Ptr result);
+
+	static ZMQMessage fromServerLastValueCommand(
+		const ServerLastValueCommand::Ptr cmd);
 
 	/*
 	 * Creates message from parsed json message.

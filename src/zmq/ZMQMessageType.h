@@ -115,11 +115,22 @@ namespace BeeeOn {
  *     ]
  * }
  *
+ * 10. message_type: device_last_value_cmd
+ *
+ * Prikaz pre ziskanie poslednej nameranej hodnoty na danom zariadeni.
+ *
+ * {
+ *     "message_type" : "device_last_value_cmd",
+ *     "device_id" : "0x132465789",
+ *     "module_id" : 0
+ * }
+ *
  */
 struct ZMQMessageTypeEnum {
 	enum Raw {
 		TYPE_ERROR,
 		TYPE_DEFAULT_RESULT,
+		TYPE_DEVICE_LAST_VALUE_CMD,
 		TYPE_DEVICE_LIST_CMD,
 		TYPE_DEVICE_LIST_RESULT,
 		TYPE_HELLO_RESPONSE,

@@ -275,6 +275,9 @@ ZMQMessage ZMQMessage::fromCommand(const Command::Ptr cmd)
 	else if (cmd->is<ServerDeviceListCommand>()) {
 		return fromServerDeviceListCommand(cmd.cast<ServerDeviceListCommand>());
 	}
+	else if (cmd->is<ServerLastValueCommand>()) {
+		return fromServerLastValueCommand(cmd.cast<ServerLastValueCommand>());
+	}
 	else {
 		throw Poco::ExistsException("unsupported command: "
 			+ cmd->name());
@@ -369,6 +372,20 @@ ZMQMessage ZMQMessage::fromServerDeviceListResult(const ServerDeviceListResult::
 	return msg;
 }
 
+ZMQMessage ZMQMessage::fromServerLastValueCommand(
+	const ServerLastValueCommand::Ptr cmd)
+{
+	ZMQMessage msg;
+	Object::Ptr json = msg.jsonObject();
+
+	msg.setType(ZMQMessageType::fromRaw(
+		ZMQMessageType::TYPE_DEVICE_LAST_VALUE_CMD));
+	msg.setDeviceID(json, cmd->deviceID());
+	msg.setModuleID(json, cmd->moduleID());
+
+	return msg;
+}
+
 ZMQMessage ZMQMessage::fromJSON(const string &json)
 {
 	return ZMQMessage(JsonUtil::parse(json));
@@ -444,4 +461,9 @@ void ZMQMessage::toServerDeviceListResult(ServerDeviceListResult::Ptr result)
 
 	result->setStatus(getResultState());
 	result->setDeviceList(deviceList);
+}
+
+ServerLastValueCommand::Ptr ZMQMessage::toServerLastValueCommand()
+{
+	return new ServerLastValueCommand(getDeviceID(m_json), getModuleID(m_json));
 }
