@@ -68,10 +68,20 @@ namespace BeeeOn {
  *     "message_type" : "listen_cmd",
  *     "duration" : 60
  * }
+ *
+ * 6. message_type: default_result
+ *
+ * Default response pre vacsinu prikazov.
+ *
+ * {
+ *     "message_type" : "default_result",
+ *     "result_status" : 0
+ * }
  */
 struct ZMQMessageTypeEnum {
 	enum Raw {
 		TYPE_ERROR,
+		TYPE_DEFAULT_RESULT,
 		TYPE_HELLO_RESPONSE,
 		TYPE_HELLO_REQUEST,
 		TYPE_LISTEN_CMD,

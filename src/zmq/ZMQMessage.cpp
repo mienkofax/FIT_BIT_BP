@@ -112,6 +112,11 @@ void ZMQMessage::setID(const GlobalID &id)
 	m_json->set("id", id.toString());
 }
 
+void ZMQMessage::setResultState(Result::Status resultState)
+{
+	m_json->set("result_status", (int) resultState);
+}
+
 ZMQMessageError::Error ZMQMessage::getErrorCode()
 {
 	return static_cast<ZMQMessageError::Error>(
@@ -183,6 +188,12 @@ Timespan ZMQMessage::getDuration()
 GlobalID ZMQMessage::id()
 {
 	return GlobalID::parse(JsonUtil::extract<string>(m_json, "id"));
+}
+
+Result::Status ZMQMessage::getResultState()
+{
+	return static_cast<Result::Status>(
+		JsonUtil::extract<int>(m_json, "result_status"));
 }
 
 ZMQMessage ZMQMessage::fromError(
@@ -265,6 +276,27 @@ ZMQMessage ZMQMessage::fromGatewayListenCommand(const GatewayListenCommand::Ptr 
 	return msg;
 }
 
+ZMQMessage ZMQMessage::fromResult(const Result::Ptr result)
+{
+	if (result->is<Result>()) {
+		return fromDefaultResult(result.cast<Result>());
+	}
+	else {
+		throw Poco::ExistsException("unsupported result");
+	}
+}
+
+ZMQMessage ZMQMessage::fromDefaultResult(const Result::Ptr result)
+{
+	ZMQMessage msg;
+
+	msg.setType(ZMQMessageType::fromRaw(
+		ZMQMessageType::TYPE_DEFAULT_RESULT	));
+	msg.setResultState(result->status());
+
+	return msg;
+}
+
 ZMQMessage ZMQMessage::fromJSON(const string &json)
 {
 	return ZMQMessage(JsonUtil::parse(json));
@@ -301,4 +333,9 @@ SensorData ZMQMessage::toSensorData()
 GatewayListenCommand::Ptr ZMQMessage::toGatewayListenCommand()
 {
 	return new GatewayListenCommand(getDuration());
+}
+
+void ZMQMessage::toDefaultResult(Result::Ptr result)
+{
+	result->setStatus(getResultState());
 }

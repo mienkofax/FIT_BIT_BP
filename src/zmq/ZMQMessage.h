@@ -5,7 +5,9 @@
 
 #include <Poco/JSON/Object.h>
 
+#include "core/Answer.h"
 #include "core/Command.h"
+#include "core/Result.h"
 #include "model/DeviceManagerID.h"
 #include "model/DevicePrefix.h"
 #include "model/GlobalID.h"
@@ -78,6 +80,8 @@ public:
 
 	GatewayListenCommand::Ptr toGatewayListenCommand();
 
+	void toDefaultResult(Result::Ptr result);
+
 	/*
 	 * Parses json message and store into Poco::JSON::Object (m_json).
 	 */
@@ -97,10 +101,14 @@ public:
 
 	static ZMQMessage fromCommand(const Command::Ptr cmd);
 
+	static ZMQMessage fromResult(const Result::Ptr result);
+
 private:
 	Poco::JSON::Object::Ptr jsonObject() const;
 
 	static ZMQMessage fromGatewayListenCommand(const GatewayListenCommand::Ptr cmd);
+
+	static ZMQMessage fromDefaultResult(const Result::Ptr result);
 
 	/*
 	 * Creates message from parsed json message.
@@ -206,6 +214,14 @@ private:
 	 */
 	void setDuration(const Poco::Timespan &duration);
 	Poco::Timespan getDuration();
+
+	/*
+	 * {
+	 *     "result_state" : 0
+	 * }
+	 */
+	void setResultState(Result::Status resultState);
+	Result::Status getResultState();
 
 private:
 	Poco::JSON::Object::Ptr m_json;

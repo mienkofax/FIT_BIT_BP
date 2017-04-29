@@ -5,6 +5,7 @@
 #include <Poco/JSON/Parser.h>
 
 #include "commands/GatewayListenCommand.h"
+#include "core/AnswerQueue.h"
 #include "model/SensorData.h"
 #include "util/JsonUtil.h"
 #include "zmq/ZMQMessage.h"
@@ -24,6 +25,7 @@ class ZMQMessageTest : public CppUnit::TestFixture {
 	CPPUNIT_TEST(testHelloResponse);
 	CPPUNIT_TEST(testMeasuredValues);
 	CPPUNIT_TEST(testGatewayListenCommand);
+	CPPUNIT_TEST(testDefaultResult);
 	CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -33,6 +35,7 @@ public:
 	void testHelloResponse();
 	void testMeasuredValues();
 	void testGatewayListenCommand();
+	void testDefaultResult();
 
 private:
 	std::string toPocoJSON(const std::string &json);
@@ -200,6 +203,30 @@ void ZMQMessageTest::testGatewayListenCommand()
 
 	GatewayListenCommand::Ptr cmd = message.toGatewayListenCommand();
 	CPPUNIT_ASSERT(cmd->duration() == duration);
+}
+
+void ZMQMessageTest::testDefaultResult()
+{
+	string jsonMessage = R"(
+		{
+			"message_type" : "default_result",
+			"id" : "3feca65f-fdfc-4189-ad9d-0be68e13ef5d",
+			"result_status" : 0
+		}
+	)";
+
+	AnswerQueue queue;
+	Answer::Ptr answer = new Answer(queue);
+	Result::Ptr result = new Result(answer);
+
+	ZMQMessage message = ZMQMessage::fromResult(result);
+	message.setID(GlobalID::parse("3feca65f-fdfc-4189-ad9d-0be68e13ef5d"));
+
+	CPPUNIT_ASSERT(toPocoJSON(jsonMessage) == message.toString());
+	CPPUNIT_ASSERT(message.type() == ZMQMessageType::TYPE_DEFAULT_RESULT);
+
+	message.toDefaultResult(result);
+	CPPUNIT_ASSERT(result->status() == static_cast<Result::Status>(0));
 }
 
 }
