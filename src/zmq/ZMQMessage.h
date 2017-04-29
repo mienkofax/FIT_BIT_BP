@@ -19,6 +19,7 @@
 #include "commands/DeviceSetValueCommand.h"
 #include "commands/ServerDeviceListCommand.h"
 #include "commands/ServerLastValueCommand.h"
+#include "commands/DeviceUnpairCommand.h"
 
 #include "commands/ServerDeviceListResult.h"
 #include "commands/ServerLastValueResult.h"
@@ -97,6 +98,8 @@ public:
 	ServerLastValueCommand::Ptr toServerLastValueCommand();
 
 	void toServerLastValueResult(ServerLastValueResult::Ptr result);
+
+	DeviceUnpairCommand::Ptr toDeviceUnpairCommand();
 	/*
 	 * Parses json message and store into Poco::JSON::Object (m_json).
 	 */
@@ -138,6 +141,9 @@ private:
 
 	static ZMQMessage fromServerLastValueResult(
 		const ServerLastValueResult::Ptr result);
+
+	static ZMQMessage fromDeviceUnpairCommand(
+		const DeviceUnpairCommand::Ptr cmd);
 
 	/*
 	 * Creates message from parsed json message.

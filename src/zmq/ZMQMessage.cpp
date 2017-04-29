@@ -278,6 +278,9 @@ ZMQMessage ZMQMessage::fromCommand(const Command::Ptr cmd)
 	else if (cmd->is<ServerLastValueCommand>()) {
 		return fromServerLastValueCommand(cmd.cast<ServerLastValueCommand>());
 	}
+	else if (cmd->is<DeviceUnpairCommand>()) {
+		return fromDeviceUnpairCommand(cmd.cast<DeviceUnpairCommand>());
+	}
 	else {
 		throw Poco::ExistsException("unsupported command: "
 			+ cmd->name());
@@ -405,6 +408,17 @@ ZMQMessage ZMQMessage::fromServerLastValueResult(
 	return msg;
 }
 
+ZMQMessage ZMQMessage::fromDeviceUnpairCommand(const DeviceUnpairCommand::Ptr cmd)
+{
+	ZMQMessage msg;
+	Object::Ptr json = msg.jsonObject();
+
+	msg.setType(ZMQMessageType::fromRaw(
+		ZMQMessageType::TYPE_DEVICE_UNPAIR_CMD));
+	msg.setDeviceID(json, cmd->deviceID());
+
+	return msg;
+}
 
 ZMQMessage ZMQMessage::fromJSON(const string &json)
 {
@@ -498,4 +512,9 @@ void ZMQMessage::toServerLastValueResult(ServerLastValueResult::Ptr result)
 
 	result->setStatus(getResultState());
 	result->setValue(raw);
+}
+
+DeviceUnpairCommand::Ptr ZMQMessage::toDeviceUnpairCommand()
+{
+	return new DeviceUnpairCommand(getDeviceID(m_json));
 }

@@ -137,6 +137,15 @@ namespace BeeeOn {
  *      }
  * }
  *
+ * 12. message_type: device_unpair_cmd
+ *
+ * Odparovanie zariadenia.
+ *
+ * {
+ *     "message_type" : "device_unpair_cmd",
+ *     "device_id" : "0x132465789"
+ * }
+ *
  */
 struct ZMQMessageTypeEnum {
 	enum Raw {
@@ -146,6 +155,7 @@ struct ZMQMessageTypeEnum {
 		TYPE_DEVICE_LAST_VALUE_RESULT,
 		TYPE_DEVICE_LIST_CMD,
 		TYPE_DEVICE_LIST_RESULT,
+		TYPE_DEVICE_UNPAIR_CMD,
 		TYPE_HELLO_RESPONSE,
 		TYPE_HELLO_REQUEST,
 		TYPE_LISTEN_CMD,
