@@ -21,6 +21,7 @@
 #include "commands/ServerLastValueCommand.h"
 
 #include "commands/ServerDeviceListResult.h"
+#include "commands/ServerLastValueResult.h"
 
 namespace BeeeOn {
 
@@ -94,6 +95,8 @@ public:
 	void toServerDeviceListResult(ServerDeviceListResult::Ptr result);
 
 	ServerLastValueCommand::Ptr toServerLastValueCommand();
+
+	void toServerLastValueResult(ServerLastValueResult::Ptr result);
 	/*
 	 * Parses json message and store into Poco::JSON::Object (m_json).
 	 */
@@ -132,6 +135,9 @@ private:
 
 	static ZMQMessage fromServerLastValueCommand(
 		const ServerLastValueCommand::Ptr cmd);
+
+	static ZMQMessage fromServerLastValueResult(
+		const ServerLastValueResult::Ptr result);
 
 	/*
 	 * Creates message from parsed json message.

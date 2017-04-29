@@ -125,12 +125,25 @@ namespace BeeeOn {
  *     "module_id" : 0
  * }
  *
+ * 11. message_type: device_last_value_cmd
+ *
+ * Posledna zaznamenana hodnota na serveri.
+ *
+ * {
+ *     "message_type" : "device_last_value_cmd",
+ *     "values" : {
+ *         "raw" : "103.5",
+ *         "type" : "double",
+ *      }
+ * }
+ *
  */
 struct ZMQMessageTypeEnum {
 	enum Raw {
 		TYPE_ERROR,
 		TYPE_DEFAULT_RESULT,
 		TYPE_DEVICE_LAST_VALUE_CMD,
+		TYPE_DEVICE_LAST_VALUE_RESULT,
 		TYPE_DEVICE_LIST_CMD,
 		TYPE_DEVICE_LIST_RESULT,
 		TYPE_HELLO_RESPONSE,

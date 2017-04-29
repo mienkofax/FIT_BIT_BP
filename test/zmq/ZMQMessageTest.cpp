@@ -31,6 +31,7 @@ class ZMQMessageTest : public CppUnit::TestFixture {
 	CPPUNIT_TEST(testDeviceListCommand);
 	CPPUNIT_TEST(testDeviceListResult);
 	CPPUNIT_TEST(testServerLastValueCommand);
+	CPPUNIT_TEST(testServerLastValueResult);
 	CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -45,6 +46,7 @@ public:
 	void testDeviceListCommand();
 	void testDeviceListResult();
 	void testServerLastValueCommand();
+	void testServerLastValueResult();
 
 private:
 	std::string toPocoJSON(const std::string &json);
@@ -366,6 +368,35 @@ void ZMQMessageTest::testServerLastValueCommand()
 	ServerLastValueCommand::Ptr cmd = message.toServerLastValueCommand();
 	CPPUNIT_ASSERT(cmd->deviceID() == deviceID);
 	CPPUNIT_ASSERT(cmd->moduleID() == moduleID);
+}
+
+void ZMQMessageTest::testServerLastValueResult()
+{
+	string jsonMessage = R"(
+		{
+			"message_type" : "device_last_value_result",
+			"id" : "3feca65f-fdfc-4189-ad9d-0be68e13ef5d",
+			"result_status" : 0,
+			"values" : {
+					"raw" : "123.500000",
+					"type" : "double"
+			}
+		}
+	)";
+
+	AnswerQueue queue;
+	Answer::Ptr answer = new Answer(queue);
+	ServerLastValueResult::Ptr result = new ServerLastValueResult(answer);
+	result->setValue(123.5);
+
+	ZMQMessage message = ZMQMessage::fromResult(result);
+	message.setID(GlobalID::parse("3feca65f-fdfc-4189-ad9d-0be68e13ef5d"));
+
+	CPPUNIT_ASSERT(toPocoJSON(jsonMessage) == message.toString());
+	CPPUNIT_ASSERT(message.type() == ZMQMessageType::TYPE_DEVICE_LAST_VALUE_RESULT);
+
+	message.toServerLastValueResult(result);
+	CPPUNIT_ASSERT(result->value() == 123.5);
 }
 
 }

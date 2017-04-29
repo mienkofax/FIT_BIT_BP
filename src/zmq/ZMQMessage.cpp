@@ -304,6 +304,9 @@ ZMQMessage ZMQMessage::fromResult(const Result::Ptr result)
 	else if (result->is<ServerDeviceListResult>()) {
 		return fromServerDeviceListResult(result.cast<ServerDeviceListResult>());
 	}
+	else if (result->is<ServerLastValueResult>()) {
+		return fromServerLastValueResult(result.cast<ServerLastValueResult>());
+	}
 	else {
 		throw Poco::ExistsException("unsupported result");
 	}
@@ -386,6 +389,23 @@ ZMQMessage ZMQMessage::fromServerLastValueCommand(
 	return msg;
 }
 
+
+ZMQMessage ZMQMessage::fromServerLastValueResult(
+	const ServerLastValueResult::Ptr result)
+{
+	Object::Ptr values = new Object();
+	ZMQMessage msg;
+
+	msg.setType(ZMQMessageType::fromRaw(
+		ZMQMessageType::TYPE_DEVICE_LAST_VALUE_RESULT));
+	msg.setValue(values, result->value());
+	msg.setResultState(result->status());
+	msg.jsonObject()->set("values", values);
+
+	return msg;
+}
+
+
 ZMQMessage ZMQMessage::fromJSON(const string &json)
 {
 	return ZMQMessage(JsonUtil::parse(json));
@@ -466,4 +486,16 @@ void ZMQMessage::toServerDeviceListResult(ServerDeviceListResult::Ptr result)
 ServerLastValueCommand::Ptr ZMQMessage::toServerLastValueCommand()
 {
 	return new ServerLastValueCommand(getDeviceID(m_json), getModuleID(m_json));
+}
+
+void ZMQMessage::toServerLastValueResult(ServerLastValueResult::Ptr result)
+{
+	Object::Ptr jsonObject = m_json->getObject("values");
+	double raw;
+
+	if (!getValue(jsonObject, raw))
+		throw InvalidArgumentException("invalid set message");
+
+	result->setStatus(getResultState());
+	result->setValue(raw);
 }
