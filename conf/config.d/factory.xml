@@ -12,6 +12,10 @@
 		</instance>
 
 		<instance name="commandDispatcher" class="BeeeOn::CommandDispatcher">
+			<set name="registerHandler" ref="fakeHandler1"/>
+		</instance>
+
+		<instance name="fakeHandler1" class="BeeeOn::FakeHandler">
 		</instance>
 
 		<instance name="virtualSensor1" class="BeeeOn::VirtualSensor">
@@ -44,6 +48,7 @@
 			<set name="helloServerHost" text="${zmq-broker.hello.server.host}" />
 			<set name="helloServerPort" number="${zmq-broker.hello.server.port}" />
 			<set name="distributor" ref="distributor"/>
+			<set name="commandDispatcher" ref="commandDispatcher"/>
 		</instance>
 
 	</factory>

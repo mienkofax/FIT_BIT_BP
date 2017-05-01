@@ -12,6 +12,7 @@ find_library (PTHREAD pthread)
 find_library (ZMQ zmq)
 
 file(GLOB SOURCES
+	${PROJECT_SOURCE_DIR}/zmq/FakeHandler.cpp
 	${PROJECT_SOURCE_DIR}/commands/DeviceSetValueCommand.cpp
 	${PROJECT_SOURCE_DIR}/commands/DeviceUnpairCommand.cpp
 	${PROJECT_SOURCE_DIR}/commands/GatewayListenCommand.cpp
