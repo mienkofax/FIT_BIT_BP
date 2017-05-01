@@ -34,6 +34,8 @@ file(GLOB SOURCES
 	${PROJECT_SOURCE_DIR}/core/Result.cpp
 	${PROJECT_SOURCE_DIR}/core/VirtualSensor.cpp
 	${PROJECT_SOURCE_DIR}/exporters/NamedPipeExporter.cpp
+	${PROJECT_SOURCE_DIR}/jablotron/JablotronDeviceManager.cpp
+	${PROJECT_SOURCE_DIR}/jablotron/SerialControl.cpp
 	${PROJECT_SOURCE_DIR}/model/DeviceManagerID.cpp
 	${PROJECT_SOURCE_DIR}/model/ModuleID.cpp
 	${PROJECT_SOURCE_DIR}/model/SensorValue.cpp

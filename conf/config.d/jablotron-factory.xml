@@ -1,0 +1,17 @@
+<system>
+	<factory>
+		<instance name="jablotron-device-manager" class="BeeeOn::LoopRunner">
+			<add name="runnables" ref="jablotron" if-yes="${jablotron.enable}" />
+		</instance>
+
+		<instance name="jablotron" class="BeeeOn::JablotronDeviceManager">
+			<set name="dataServerHost" text="${zmq-broker.data.server.host}" />
+			<set name="dataServerPort" number="${zmq-broker.data.server.port}" />
+			<set name="helloServerHost" text="${zmq-broker.hello.server.host}" />
+			<set name="helloServerPort" number="${zmq-broker.hello.server.port}" />
+			<set name="prefixName" text="${jablotron.device.manager.prefix.name}" />
+			<set name="donglePath" text="${jablotron.dongle.path}" />
+		</instance>
+
+	</factory>
+</system>
