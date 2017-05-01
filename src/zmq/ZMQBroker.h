@@ -1,8 +1,13 @@
 #ifndef BEEEON_ZMQ_BROKER_H
 #define BEEEON_ZMQ_BROKER_H
 
+#include <map>
+
+#include "core/AnswerQueue.h"
 #include "core/CommandDispatcher.h"
 #include "core/Distributor.h"
+#include "loop/StoppableLoop.h"
+#include "model/GlobalID.h"
 #include "zmq/ZMQConnector.h"
 #include "zmq/ZMQDeviceManagerTable.h"
 
@@ -51,10 +56,21 @@ protected:
 	 */
 	void registerDeviceManager(ZMQMessage &zmqMessage);
 
+	void checkQueue();
+
+protected:
+	struct ResultData {
+		GlobalID resultID;
+		DeviceManagerID deviceManagerID;
+		Command::Ptr cmd;
+	};
+
 protected:
 	Poco::SharedPtr<Distributor> m_distributor;
 	Poco::SharedPtr<CommandDispatcher> m_commandDispatcher;
 	ZMQDeviceManagerTable m_deviceManagersTable;
+	std::map<Answer::Ptr, ResultData> m_resultTable;
+	AnswerQueue m_answerQueue;
 };
 
 }

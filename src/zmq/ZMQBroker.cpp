@@ -18,6 +18,7 @@ BEEEON_OBJECT_REF("commandDispatcher", &ZMQBroker::setCommandDispatcher)
 BEEEON_OBJECT_END(BeeeOn, ZMQBroker)
 
 const int LOOP_USLEEP = 100;
+const int QUEUE_WAIT = 10000;
 
 using namespace BeeeOn;
 using namespace std;
@@ -40,11 +41,32 @@ void ZMQBroker::run()
 	while(!m_stop) {
 		dataServerReceive();
 		helloServerReceive();
+		checkQueue();
 		usleep(LOOP_USLEEP);
 	}
 
 	if (logger().debug())
 		logger().debug("ZMQ_REP and ZMQ_ROUTER stop");
+}
+
+void ZMQBroker::checkQueue()
+{
+	std::list<Answer::Ptr> dirtyList;
+	m_answerQueue.wait(QUEUE_WAIT, dirtyList);
+
+	for (auto &answer : dirtyList) {
+
+		for (unsigned long i = 0; i < answer->resultsCount(); ++i) {
+			auto it = m_resultTable.find(answer);
+
+			ZMQUtil::sendMultipart(m_dataServerSocket,
+				it->second.deviceManagerID.toString());
+
+			ZMQMessage msg = ZMQMessage::fromResult(answer->at(i));
+			msg.setID(it->second.resultID);
+			ZMQUtil::send(m_dataServerSocket, msg.toString());
+		}
+	}
 }
 
 void ZMQBroker::configureDataSockets()
@@ -180,6 +202,24 @@ void ZMQBroker::handleDataMessage(ZMQMessage &zmqMessage,
 	case ZMQMessageType::TYPE_MEASURED_VALUES:
 		m_distributor->exportData(zmqMessage.toSensorData());
 		break;
+	case ZMQMessageType::TYPE_LISTEN_CMD: {
+		Answer::Ptr answer =  new Answer(m_answerQueue);
+		GatewayListenCommand::Ptr cmd = zmqMessage.toGatewayListenCommand();
+
+		m_resultTable.insert(
+			make_pair(answer, ResultData{zmqMessage.id(),deviceManagerID, cmd}));
+
+		m_commandDispatcher->dispatch(cmd, answer);
+	}
+	case ZMQMessageType::TYPE_DEVICE_LAST_VALUE_CMD: {
+		Answer::Ptr answer =  new Answer(m_answerQueue);
+		ServerLastValueCommand::Ptr cmd = zmqMessage.toServerLastValueCommand();
+
+		m_resultTable.insert(
+			make_pair(answer, ResultData{zmqMessage.id(),deviceManagerID, cmd}));
+
+		m_commandDispatcher->dispatch(cmd, answer);
+	}
 	default:
 		sendError(
 			ZMQMessageError::ERROR_UNSUPPORTED_MESSAGE,
