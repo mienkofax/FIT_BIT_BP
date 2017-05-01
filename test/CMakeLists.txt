@@ -19,6 +19,7 @@ file(GLOB TEST_SOURCES
 	${PROJECT_SOURCE_DIR}/util/IncompleteTimestampTest.cpp
 	${PROJECT_SOURCE_DIR}/zmq/ZMQDeviceManagerTableTest.cpp
 	${PROJECT_SOURCE_DIR}/zmq/ZMQMessageTest.cpp
+	${PROJECT_SOURCE_DIR}/zmq/ZMQBrokerClientTest.cpp
 )
 
 include_directories(
