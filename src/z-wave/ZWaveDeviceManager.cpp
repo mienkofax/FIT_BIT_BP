@@ -72,16 +72,24 @@ void ZWaveDeviceManager::run()
 {
 	installOption();
 	DeviceManager::runClient();
+	m_notificationProcessor.setZMQClient(m_zmqClient);
+
+	m_notificationProcessor.lock();
 
 	m_driver.assign(new ZWaveDriver(m_donglePath));
 	Manager::Create();
+	Manager::Get()->AddWatcher(onNotification, &m_notificationProcessor);
 	m_driver->registerItself();
+
+	m_notificationProcessor.waitUntilQueried();
+	m_homeId = m_notificationProcessor.homeID();
 }
 
 void ZWaveDeviceManager::stop()
 {
 	m_driver->unregisterItself();
 
+	Manager::Get()->RemoveWatcher(onNotification, &m_notificationProcessor);
 	Manager::Destroy();
 	Options::Destroy();
 
