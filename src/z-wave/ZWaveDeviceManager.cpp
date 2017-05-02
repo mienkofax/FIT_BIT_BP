@@ -4,6 +4,8 @@
 #include "di/Injectable.h"
 #include "z-wave/ZWaveDeviceManager.h"
 
+#include "z-wave/manufacturers/FibaroZWaveMessageFactory.h"
+
 BEEEON_OBJECT_BEGIN(BeeeOn, ZWaveDeviceManager)
 BEEEON_OBJECT_CASTABLE(StoppableRunnable)
 BEEEON_OBJECT_TEXT("dataServerHost", &ZWaveDeviceManager::setDataServerHost)
@@ -100,4 +102,7 @@ void ZWaveDeviceManager::stop()
 void ZWaveDeviceManager::installManufacturers()
 {
 	m_notificationProcessor.setGenericMessageFactory(&m_factory);
+
+	m_factory.registerManufacturer(
+		FIBARO_MANUFACTURER, new FibaroZWaveMessageFactory());
 }

@@ -65,6 +65,8 @@ file(GLOB SOURCES
 	${PROJECT_SOURCE_DIR}/z-wave/NotificationProcessor.cpp
 	${PROJECT_SOURCE_DIR}/z-wave/ZWaveDeviceManager.cpp
 	${PROJECT_SOURCE_DIR}/z-wave/ZWaveMessage.cpp
+	${PROJECT_SOURCE_DIR}/z-wave/manufacturers/FibaroZWaveMessageFactory.cpp
+	${PROJECT_SOURCE_DIR}/z-wave/products/FibaroFGK107ZWaveMessage.cpp
 )
 
 include_directories(
