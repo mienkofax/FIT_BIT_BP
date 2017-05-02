@@ -10,6 +10,8 @@
 #include <Notification.h>
 
 #include "util/Loggable.h"
+#include "z-wave/GenericZWaveMessageFactory.h"
+#include "z-wave/ZWaveMessage.h"
 #include "zmq/ZMQClient.h"
 
 namespace BeeeOn {
@@ -37,6 +39,12 @@ public:
 	uint32_t homeID();
 
 	void setZMQClient(Poco::SharedPtr<ZMQClient> client);
+
+	/*
+	 * Set factory
+	 * @param *factory
+	 */
+	void setGenericMessageFactory(GenericZWaveMessageFactory *factory);
 
 	/*
 	 * Find data using notification
@@ -101,12 +109,16 @@ private:
 	 */
 	void nodeRemoved(const OpenZWave::Notification *notification);
 
+	int sendValue(const uint8_t &nodeId, ZWaveMessage *message,
+		const std::list<OpenZWave::ValueID> &values);
+
 private:
 	Poco::Mutex m_lock;
 	Poco::Mutex m_initMutex;
 	Poco::Condition m_initCondition;
 	static std::map<uint8_t, NodeInfo> m_nodesMap;
 	Poco::SharedPtr<ZMQClient> m_zmqClient;
+	GenericZWaveMessageFactory *m_factory;
 
 	uint32_t m_homeId;
 	bool m_initFailed;

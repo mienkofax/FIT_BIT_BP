@@ -25,6 +25,7 @@ protected:
 	void onEvent(const void*, ZMQMessage &zmqMessage) override;
 
 	void installOption();
+	void installManufacturers();
 
 protected:
 	std::string m_userPath;
@@ -36,6 +37,7 @@ protected:
 	uint32_t m_homeId;
 	Poco::SharedPtr<ZWaveDriver> m_driver;
 	NotificationProcessor m_notificationProcessor;
+	GenericZWaveMessageFactory m_factory;
 };
 
 }

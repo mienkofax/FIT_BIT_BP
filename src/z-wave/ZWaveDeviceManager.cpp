@@ -70,6 +70,7 @@ void ZWaveDeviceManager::installOption()
 
 void ZWaveDeviceManager::run()
 {
+	installManufacturers();
 	installOption();
 	DeviceManager::runClient();
 	m_notificationProcessor.setZMQClient(m_zmqClient);
@@ -94,4 +95,9 @@ void ZWaveDeviceManager::stop()
 	Options::Destroy();
 
 	DeviceManager::stop();
+}
+
+void ZWaveDeviceManager::installManufacturers()
+{
+	m_notificationProcessor.setGenericMessageFactory(&m_factory);
 }

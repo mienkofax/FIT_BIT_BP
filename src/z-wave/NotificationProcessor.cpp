@@ -3,13 +3,16 @@
 
 #include <Poco/Logger.h>
 #include <Poco/ScopedLock.h>
+#include <Poco/NumberParser.h>
 
 #include <Manager.h>
 
 #include "z-wave/NotificationProcessor.h"
+#include "zmq/ZMQMessage.h"
 
 using namespace BeeeOn;
 using namespace OpenZWave;
+using Poco::NumberParser;
 
 typedef map<uint8_t, NodeInfo> nodeInfoMap;
 
@@ -64,9 +67,68 @@ void NotificationProcessor::valueAdded(const Notification *notification)
 void NotificationProcessor::valueChanged(const Notification *notification)
 {
 	nodeInfoMap::iterator it = m_nodesMap.find(notification->GetNodeId());
+	ZWaveMessage *message;
+	uint32_t manufacturer;
+	uint32_t product;
+	uint8_t nodeId;
 
 	if (it == m_nodesMap.end())
 		return;
+
+	nodeId = notification->GetNodeId();
+
+	try {
+		manufacturer = NumberParser::parseHex(
+			Manager::Get()->GetNodeManufacturerId(m_homeId, nodeId));
+		product = NumberParser::parseHex(
+			Manager::Get()->GetNodeProductId(m_homeId, nodeId));
+	}
+	catch (Poco::Exception &ex) {
+		logger().error("failed to parse manufacturer/product value");
+		logger().log(ex, __FILE__, __LINE__);
+		return;
+	}
+
+	try {
+		message = m_factory->create(manufacturer, product);
+	}
+	catch (Poco::Exception &ex) {
+		logger().error("manufacturer: " + std::to_string(manufacturer)
+			+ " product: " + std::to_string(product));
+		logger().log(ex, __FILE__, __LINE__);
+		return;
+	}
+
+	sendValue(nodeId, message, it->second.m_values);
+	delete message;
+}
+
+int NotificationProcessor::sendValue(const uint8_t &nodeId, ZWaveMessage *message,
+	const std::list<OpenZWave::ValueID> &values)
+{
+	SensorData sensorData;
+	vector<ZWaveSensorValue> zwaveValues;
+
+	for (auto &item : values) {
+		string value;
+		Manager::Get()->GetValueAsString(item, &value);
+
+		zwaveValues.push_back({
+			item.GetCommandClassId(),
+			item.GetIndex(),
+			item,
+			value,
+			Manager::Get()->GetValueUnits(item)});
+		}
+
+	sensorData = message->extractValues(zwaveValues);
+
+	sensorData.setDeviceID(DeviceID(
+		DevicePrefix::fromRaw(DevicePrefix::PREFIX_ZWAVE),
+		message->getEUID(m_homeId, nodeId)));
+
+	ZMQMessage msg = ZMQMessage::fromSensorData(sensorData);
+	return m_zmqClient->send(msg.toString());
 }
 
 void NotificationProcessor::valueRemoved(const Notification *notification)
@@ -194,6 +256,12 @@ Poco::Nullable<NodeInfo> NotificationProcessor::findNodeInfo(
 void NotificationProcessor::setZMQClient(Poco::SharedPtr<ZMQClient> client)
 {
 	m_zmqClient = client;
+}
+
+void NotificationProcessor::setGenericMessageFactory(
+	GenericZWaveMessageFactory *factory)
+{
+	m_factory = factory;
 }
 
 void onNotification(OpenZWave::Notification const *notification,
