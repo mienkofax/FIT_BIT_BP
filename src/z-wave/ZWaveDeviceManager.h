@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "core/DeviceManager.h"
+#include "z-wave/ZWaveDriver.h"
 
 namespace BeeeOn {
 
@@ -31,6 +32,7 @@ protected:
 	int m_pollInterval;
 	int m_driverMaxAttempts;
 	bool m_saveConfigurationFile;
+	Poco::SharedPtr<ZWaveDriver> m_driver;
 };
 
 }

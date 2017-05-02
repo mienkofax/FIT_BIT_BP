@@ -71,14 +71,17 @@ void ZWaveDeviceManager::installOption()
 void ZWaveDeviceManager::run()
 {
 	installOption();
-
 	DeviceManager::runClient();
 
+	m_driver.assign(new ZWaveDriver(m_donglePath));
 	Manager::Create();
+	m_driver->registerItself();
 }
 
 void ZWaveDeviceManager::stop()
 {
+	m_driver->unregisterItself();
+
 	Manager::Destroy();
 	Options::Destroy();
 
