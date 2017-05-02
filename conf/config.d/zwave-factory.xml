@@ -1,0 +1,22 @@
+<system>
+	<factory>
+		<instance name="zwave-device-manager" class="BeeeOn::LoopRunner">
+			<add name="runnables" ref="zwave" if-yes="${zwave.enable}" />
+		</instance>
+
+		<instance name="zwave" class="BeeeOn::ZWaveDeviceManager">
+			<set name="dataServerHost" text="${zmq-broker.data.server.host}" />
+			<set name="dataServerPort" number="${zmq-broker.data.server.port}" />
+			<set name="helloServerHost" text="${zmq-broker.hello.server.host}" />
+			<set name="helloServerPort" number="${zmq-broker.hello.server.port}" />
+			<set name="prefixName" text="${zwave.device.manager.prefix.name}" />
+			<set name="setUserPath" text="${zwave.user.path}" />
+			<set name="donglePath" text="${zwave.dongle.path}" />
+			<set name="setConfigPath" text="${zwave.config.path}" />
+			<set name="setPollInterval" number="${zwave.poll.interval}" />
+			<set name="setDriverMaxAttempts" number="${zwave.driver.max_attempts}" />
+			<set name="setSaveConfigurationFile" number="${zwave.save.configuration.file}" />
+		</instance>
+
+	</factory>
+</system>

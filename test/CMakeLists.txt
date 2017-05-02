@@ -11,6 +11,8 @@ find_library (POCO_JSON PocoJSON)
 find_library (POCO_XML PocoXML)
 find_library (PTHREAD pthread)
 find_library (ZMQ zmq)
+find_library (OPENZWAVE openzwave)
+
 
 file(GLOB TEST_SOURCES
 	${PROJECT_SOURCE_DIR}/core/AnswerQueueTest.cpp
@@ -45,6 +47,7 @@ set(LIBS
 	${CPP_UNIT}
 	${PTHREAD}
 	${ZMQ}
+	${OPENZWAVE}
 )
 
 target_link_libraries(test-suite-gateway
