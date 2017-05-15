@@ -5,6 +5,7 @@
 
 #include "core/AnswerQueue.h"
 #include "core/CommandDispatcher.h"
+#include "core/CommandHandler.h"
 #include "core/Distributor.h"
 #include "loop/StoppableLoop.h"
 #include "model/GlobalID.h"
@@ -27,9 +28,12 @@ class Distributor;
  * server-client and this socket serves for registering of
  * device mangers to enable communication using dataSocket.
  */
-class ZMQBroker : public ZMQConnector {
+class ZMQBroker : public ZMQConnector, public CommandHandler {
 public:
 	ZMQBroker();
+
+	bool accept(const Command::Ptr cmd) override;
+	void handle(Command::Ptr cmd, Answer::Ptr answer) override;
 
 	void run() override;
 

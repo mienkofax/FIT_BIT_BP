@@ -24,13 +24,58 @@ using namespace BeeeOn;
 using namespace std;
 
 ZMQBroker::ZMQBroker():
-	ZMQConnector()
+	ZMQConnector(),
+	CommandHandler("ZMQBroker")
 {
 }
 
 void ZMQBroker::setDistributor(Poco::SharedPtr<Distributor> distributor)
 {
 	m_distributor = distributor;
+}
+
+bool ZMQBroker::accept(const Command::Ptr cmd)
+{
+	if (cmd->is<DeviceSetValueCommand>()) {
+		return m_deviceManagersTable.isDeviceManagerRegistered(
+			cmd.cast<DeviceSetValueCommand>()->deviceID().prefix());
+	}
+	else if (cmd->is<DeviceUnpairCommand>()) {
+		return m_deviceManagersTable.isDeviceManagerRegistered(
+			cmd.cast<DeviceUnpairCommand>()->deviceID().prefix());
+	}
+	else if (cmd->is<GatewayListenCommand>()) {
+		return true;
+	}
+
+	return false;
+}
+
+void ZMQBroker::handle(Command::Ptr cmd, Answer::Ptr answer)
+{
+	vector<DeviceManagerID> managers;
+
+	if (cmd->is<DeviceSetValueCommand>()) {
+		managers = m_deviceManagersTable.getAll(
+			cmd.cast<DeviceSetValueCommand>()->deviceID().prefix());
+	}
+	else if (cmd->is<DeviceUnpairCommand>()) {
+		managers = m_deviceManagersTable.getAll(
+			cmd.cast<DeviceSetValueCommand>()->deviceID().prefix());
+	}
+	else if (cmd->is<GatewayListenCommand>()) {
+		managers = m_deviceManagersTable.getAll();
+	}
+
+	for (auto deviceManagerID : managers) {
+		ZMQMessage msg = ZMQMessage::fromCommand(cmd);
+
+		m_resultTable.insert(
+			make_pair(answer, ResultData{msg.id(), deviceManagerID, cmd}));
+
+		ZMQUtil::sendMultipart(m_dataServerSocket, deviceManagerID.toString());
+		ZMQUtil::send(m_dataServerSocket, msg.toString());
+	}
 }
 
 void ZMQBroker::run()
