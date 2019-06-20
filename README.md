@@ -13,7 +13,7 @@ Author: Peter Tisovčík<xtisov00@stud.fit.vutbr.cz>
  * tex - zdrojové súbory bakalárskej práce
  * src - vytvorené súbory v rámci bakalárksej práce (nepreložiteľné)
  * original - zdrojové kódy celej BeeeOn Gateway aplikácie
- * xtisov00.pdf - text bakalárskej práce
+ * [xtisov00.pdf - text bakalárskej práce](http://www.fit.vutbr.cz/study/DP/BP.php?id=20103)
 
 ----------------------------------------------------------
 
