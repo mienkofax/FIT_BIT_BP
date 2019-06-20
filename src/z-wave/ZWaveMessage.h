@@ -21,6 +21,7 @@ namespace BeeeOn {
 #define COMMAND_CLASS_SWITCH_BINARY      37
 
 #define SENSOR_INDEX_BULGAR              10
+#define TEST_HOME_ID                     0xef1f4302
 
 /*
  * Represents a BeeeOn sensor data sampled at a time.
@@ -60,7 +61,7 @@ public:
 	 * It sets data to Z-Wave device
 	 * @param &beeeOnValues Data from adapter which sets for Z-Wave device
 	 */
-	virtual void setValue(const std::vector<BeeeOnSensorValue> &beeeOnValues,
+	virtual void setValue(const SensorData &sensorData,
 		const uint8_t &nodeId) = 0;
 
 	/*
@@ -80,10 +81,9 @@ public:
 	 * @param &nodeId unique identifier Zwave device
 	 * @return 64bit euid
 	 */
-	uint64_t getEUID(const uint32_t &homeId, const uint8_t &nodeId)
+	uint64_t getEUID(const uint32_t &, const uint8_t &nodeId)
 	{
-		//TODO Think of a better generate euid
-		return ((int64(homeId) << 8) | unsigned(nodeId));
+		return ((int64(TEST_HOME_ID) << 8) | unsigned(nodeId));
 	}
 
 	virtual ~ZWaveMessage()

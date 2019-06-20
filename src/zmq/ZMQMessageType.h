@@ -161,6 +161,7 @@ struct ZMQMessageTypeEnum {
 		TYPE_LISTEN_CMD,
 		TYPE_MEASURED_VALUES,
 		TYPE_SET_VALUES_CMD,
+		TYPE_SET_VALUES_RESULT,
 	};
 
 	static EnumHelper<Raw>::ValueMap &valueMap();

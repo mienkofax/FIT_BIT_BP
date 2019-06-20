@@ -4,10 +4,10 @@
 
 namespace BeeeOn {
 
-#define FIBARO_FGK_107              0x1000
-#define DEVICE_ID_FIBARO_FGK_107    25
+#define POPP_123601              0x0001
+#define DEVICE_ID_POPP_123601    17
 
-class FibaroFGK107ZWaveMessage : public ZWaveMessage {
+class Popp123601ZWaveMessage : public ZWaveMessage {
 public:
 	SensorData extractValues(
 		const std::vector<ZWaveSensorValue> &zwaveValues) override;

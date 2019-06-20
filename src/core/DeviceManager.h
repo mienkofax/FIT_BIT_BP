@@ -8,6 +8,7 @@
 #include "core/Command.h"
 #include "loop/StoppableRunnable.h"
 #include "loop/LoopRunner.h"
+#include "model/DeviceID.h"
 #include "model/GlobalID.h"
 #include "util/Loggable.h"
 #include "zmq/ZMQClient.h"

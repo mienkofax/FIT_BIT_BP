@@ -10,13 +10,13 @@ BEEEON_OBJECT_END(BeeeOn, FakeHandler)
 
 using namespace BeeeOn;
 
-bool FakeHandler::accept(const Command::Ptr cmd)
+bool FakeHandler::accept(const Command::Ptr)
 {
 	logger().warning("accept FakeHandler1");
 	return true;
 }
 
-void FakeHandler::handle(Command::Ptr cmd, Answer::Ptr answer)
+void FakeHandler::handle(Command::Ptr, Answer::Ptr answer)
 {
 	Poco::Thread::sleep(500);
 	logger().warning("handle FakeHandler1");

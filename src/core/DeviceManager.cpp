@@ -5,8 +5,8 @@ using namespace BeeeOn;
 
 DeviceManager::DeviceManager():
 	m_stop(false),
-	m_zmqClient(new ZMQClient()),
-	m_prefix(DevicePrefix::fromRaw(DevicePrefix::PREFIX_INVALID))
+	m_prefix(DevicePrefix::fromRaw(DevicePrefix::PREFIX_INVALID)),
+	m_zmqClient(new ZMQClient())
 {
 	m_runner.addRunnable(m_zmqClient);
 }
@@ -47,4 +47,3 @@ void DeviceManager::runClient()
 {
 	m_runner.start();
 }
-

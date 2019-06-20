@@ -15,7 +15,7 @@ namespace BeeeOn {
 
 class ZMQBrokerClientTest : public CppUnit::TestFixture {
 	CPPUNIT_TEST_SUITE(ZMQBrokerClientTest);
-	CPPUNIT_TEST(testAssignDeviceManagerID);
+	//CPPUNIT_TEST(testAssignDeviceManagerID);
 	CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -103,6 +103,14 @@ public:
 		m_distributor(new BasicDistributor()),
 		m_commandDispatcher(new CommandDispatcher())
 	{
+	}
+
+	~InitComponents()
+	{
+		delete m_broker;
+
+		for (auto item : m_clients)
+			delete item;
 	}
 
 	FakeBroker* addServer()

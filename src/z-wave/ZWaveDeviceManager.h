@@ -2,7 +2,9 @@
 #define BEEEON_ZWAVE_DEVICE_MANAGER_H
 
 #include <string.h>
+#include <Poco/Timer.h>
 
+#include "core/AnswerQueue.h"
 #include "core/DeviceManager.h"
 #include "z-wave/NotificationProcessor.h"
 #include "z-wave/ZWaveDriver.h"
@@ -11,6 +13,8 @@ namespace BeeeOn {
 
 class ZWaveDeviceManager : public DeviceManager {
 public:
+	ZWaveDeviceManager();
+
 	void run() override;
 	void stop() override;
 
@@ -27,6 +31,22 @@ protected:
 	void installOption();
 	void installManufacturers();
 
+	void getDeviceList();
+	void getLastValue(const DeviceID &deviceID, const ModuleID &moduleID);
+	void checkQueue();
+
+	void startListen();
+	void stopListen(Poco::Timer &timer);
+	void stopUnpair(Poco::Timer &timer);
+
+	void setLastState();
+
+	void doDeviceListResult(ZMQMessage &zmqMessage);
+	void doListenCommand(ZMQMessage &zmqMessage);
+	void doDeviceLastValueResult(ZMQMessage &zmqMessage);
+	void doDeviceUnpairCommand(ZMQMessage &zmqMessage);
+	void doSetValueCommand(ZMQMessage &zmqMessage);
+
 protected:
 	std::string m_userPath;
 	std::string m_donglePath;
@@ -38,6 +58,15 @@ protected:
 	Poco::SharedPtr<ZWaveDriver> m_driver;
 	NotificationProcessor m_notificationProcessor;
 	GenericZWaveMessageFactory m_factory;
+
+	std::set<DeviceID> m_devices;
+	AnswerQueue m_queue;
+	Poco::AtomicCounter m_listen;
+	Poco::TimerCallback<ZWaveDeviceManager> m_callback;
+	Poco::Timer m_derefListen;
+
+	Poco::TimerCallback<ZWaveDeviceManager> m_callbackUnpair;
+	Poco::Timer m_derefUnpair;
 };
 
 }

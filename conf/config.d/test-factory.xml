@@ -1,0 +1,58 @@
+<system>
+	<factory>
+		<instance name="test" class="BeeeOn::LoopRunner">
+			<add name="runnables" ref="zmqBroker" if-yes="${zmq-broker.enable}" />
+		</instance>
+
+		<instance name="distributor" class="BeeeOn::BasicDistributor">
+			<set name="exporter" ref="namedPipeExporter" if-yes="${exporter.pipe.enable}"/>
+		</instance>
+
+		<instance name="commandDispatcher" class="BeeeOn::CommandDispatcher">
+			<set name="registerHandler" ref="fakeHandlerTest"/>
+			<set name="registerHandler" ref="zmqBroker"/>
+		</instance>
+
+		<instance name="fakeHandlerTest" class="BeeeOn::FakeHandlerTest">
+			<set name="commandDispatcher" ref="commandDispatcher"/>
+			<set name="setAction" text="${command.action}" />
+			<set name="setParameter1" text="${command.parameter1}" />
+			<set name="setParameter2" text="${command.parameter2}" />
+			<set name="setParameter3" text="${command.parameter3}" />
+			<set name="setParameter4" text="${command.parameter4}" />
+			<set name="setRunTime" number="${command.run_time}" />
+			<set name="setPrefixName" text="${command.prefix}" />
+			<set name="setAC881" text="${jablotron-ac88-1.device}" />
+			<set name="setAC881LastValue" number="${jablotron-ac88-1.last_value}" />
+			<set name="setAC882" text="${jablotron-ac88-2.device}" />
+			<set name="setAC882LastValue" number="${jablotron-ac88-2.last_value}" />
+			<set name="setJA81M" text="${jablotron-ja81m.device}" />
+			<set name="setJA82SH" text="${jablotron-ja82sh.device}" />
+			<set name="setJA83M" text="${jablotron-ja83m.device}" />
+			<set name="setJA83P" text="${jablotron-ja83p.device}" />
+			<set name="setJA85ST" text="${jablotron-ja85st.device}" />
+			<set name="setRC86K" text="${jablotron-rc86k.device}" />
+			<set name="setTP82N" text="${jablotron-tp82n.device}" />
+			<set name="setAeotec" text="${zwave-aeotec.device}" />
+			<set name="setAeotecPirSensorLastValue" number="${zwave-aeotec.last_value_pir_sensor}" />
+			<set name="setAeotecRefreshTimeLastValue" number="${zwave-aeotec.last_value_refresh_time}" />
+			<set name="setDLink" text="${zwave-dlink.device}" />
+			<set name="setDLinkLastState" number="${zwave-dlink.last_value}" />
+			<set name="setFibaro" text="${zwave-fibaro.device}" />
+			<set name="setPhilio" text="${zwave-philio.device}" />
+			<set name="setPopp" text="${zwave-popp.device}" />
+			<set name="setPoppLastState" number="${zwave-popp.last_state}" />
+		</instance>
+
+		<instance name="zmqBroker" class="BeeeOn::ZMQBroker">
+			<set name="dataServerHost" text="${zmq-broker.data.server.host}" />
+			<set name="dataServerPort" number="${zmq-broker.data.server.port}" />
+			<set name="helloServerHost" text="${zmq-broker.hello.server.host}" />
+			<set name="helloServerPort" number="${zmq-broker.hello.server.port}" />
+			<set name="distributor" ref="distributor"/>
+			<set name="commandDispatcher" ref="commandDispatcher"/>
+			<set name="fakeHandlerTest" ref="fakeHandlerTest"/>
+		</instance>
+
+	</factory>
+</system>

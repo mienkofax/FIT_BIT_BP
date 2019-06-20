@@ -10,7 +10,7 @@
 using namespace BeeeOn;
 using namespace std;
 
-#define READ_TIMEOUT        50000
+#define READ_TIMEOUT        20000
 #define MAX_BUFF_SIZE       64
 #define MAX_REOPEN_COUNT    10
 #define DELAY_AFTER_OPEN    3
