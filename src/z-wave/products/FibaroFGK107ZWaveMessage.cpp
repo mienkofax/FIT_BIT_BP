@@ -34,8 +34,7 @@ SensorData FibaroFGK107ZWaveMessage::extractValues(
 	return sensorData;
 }
 
-void FibaroFGK107ZWaveMessage::setValue(
-	const std::vector<BeeeOnSensorValue> &beeeonValues, const uint8_t &nodeId)
+void FibaroFGK107ZWaveMessage::setValue(const SensorData&, const uint8_t&)
 {
 }
 

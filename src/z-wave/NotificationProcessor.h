@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <set>
 
 #include <Poco/Condition.h>
 #include <Poco/Mutex.h>
@@ -13,6 +14,8 @@
 #include "z-wave/GenericZWaveMessageFactory.h"
 #include "z-wave/ZWaveMessage.h"
 #include "zmq/ZMQClient.h"
+
+#include "model/DeviceID.h"
 
 namespace BeeeOn {
 
@@ -30,9 +33,8 @@ typedef std::map<uint8_t, NodeInfo> nodeInfoMap;
  */
 class NotificationProcessor : public Loggable {
 public:
-	NotificationProcessor();
-
-	void lock();
+	NotificationProcessor(std::set<DeviceID> &pairedDevices,
+		Poco::AtomicCounter &listen);
 
 	void waitUntilQueried();
 
@@ -122,6 +124,9 @@ private:
 
 	uint32_t m_homeId;
 	bool m_initFailed;
+
+	std::set<DeviceID> &m_pairedDevices;
+	Poco::AtomicCounter &m_listen;
 };
 
 }

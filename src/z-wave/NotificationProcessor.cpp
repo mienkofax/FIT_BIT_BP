@@ -14,28 +14,19 @@ using namespace BeeeOn;
 using namespace OpenZWave;
 using Poco::NumberParser;
 
-typedef map<uint8_t, NodeInfo> nodeInfoMap;
-
 map<uint8_t, NodeInfo> NotificationProcessor::m_nodesMap;
 
-NotificationProcessor::NotificationProcessor():
-	m_initFailed(false)
+NotificationProcessor::NotificationProcessor(set<DeviceID> &pairedDevices,
+		Poco::AtomicCounter &listen):
+	m_initFailed(false),
+	m_pairedDevices(pairedDevices),
+	m_listen(listen)
 {
-}
-
-void NotificationProcessor::lock()
-{
-	m_initMutex.lock();
 }
 
 void NotificationProcessor::waitUntilQueried()
 {
-	if (m_initMutex.tryLock()) {
-		m_initMutex.unlock();
-		throw Poco::IllegalStateException(
-			"wait on unlocked NotificationProcessor");
-	}
-
+	m_initMutex.lock();
 	m_initCondition.wait(m_initMutex);
 	m_initMutex.unlock();
 }
@@ -126,6 +117,12 @@ int NotificationProcessor::sendValue(const uint8_t &nodeId, ZWaveMessage *messag
 	sensorData.setDeviceID(DeviceID(
 		DevicePrefix::fromRaw(DevicePrefix::PREFIX_ZWAVE),
 		message->getEUID(m_homeId, nodeId)));
+
+	auto it = m_pairedDevices.find(sensorData.deviceID());
+	if (it == m_pairedDevices.end() && !m_listen) {
+		logger().warning("drop message");
+		return -1;
+	}
 
 	ZMQMessage msg = ZMQMessage::fromSensorData(sensorData);
 	return m_zmqClient->send(msg.toString());

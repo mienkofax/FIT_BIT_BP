@@ -33,6 +33,7 @@ class ZMQMessageTest : public CppUnit::TestFixture {
 	CPPUNIT_TEST(testServerLastValueCommand);
 	CPPUNIT_TEST(testServerLastValueResult);
 	CPPUNIT_TEST(testDeviceUnpairCommand);
+	CPPUNIT_TEST(testDeviceSetValueResult);
 	CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -49,6 +50,7 @@ public:
 	void testServerLastValueCommand();
 	void testServerLastValueResult();
 	void testDeviceUnpairCommand();
+	void testDeviceSetValueResult();
 
 private:
 	std::string toPocoJSON(const std::string &json);
@@ -423,6 +425,33 @@ void ZMQMessageTest::testDeviceUnpairCommand()
 
 	DeviceUnpairCommand::Ptr cmd = message.toDeviceUnpairCommand();
 	CPPUNIT_ASSERT(cmd->deviceID() == deviceID);
+}
+
+void ZMQMessageTest::testDeviceSetValueResult()
+{
+	string jsonMessage = R"(
+		{
+			"message_type" : "set_values_result",
+			"id" : "3feca65f-fdfc-4189-ad9d-0be68e13ef5d",
+			"result_status" : 0,
+			"extented_set_status" : 0
+		}
+	)";
+
+	AnswerQueue queue;
+	Answer::Ptr answer = new Answer(queue);
+	DeviceSetValueResult::Ptr result = new DeviceSetValueResult(answer);
+	result->setExtendetSetStatus(DeviceSetValueResult::GW_DEVICE_SUCCESS);
+
+	ZMQMessage message = ZMQMessage::fromResult(result);
+	message.setID(GlobalID::parse("3feca65f-fdfc-4189-ad9d-0be68e13ef5d"));
+
+	CPPUNIT_ASSERT(toPocoJSON(jsonMessage) == message.toString());
+	CPPUNIT_ASSERT(message.type() == ZMQMessageType::TYPE_SET_VALUES_RESULT);
+
+	message.toDefaultResult(result);
+	CPPUNIT_ASSERT(result->status() == static_cast<Result::Status>(0));
+
 }
 
 }

@@ -10,13 +10,11 @@
 #include <Poco/RegularExpression.h>
 #include <Poco/String.h>
 
-#include <model/SensorData.h>
-#include <util/ZMQUtil.h>
-#include <zmq/ZMQMessage.h>
-#include <core/AnswerQueue.h>
-
-#include "jablotron/JablotronDeviceManager.h"
+#include "core/AnswerQueue.h"
 #include "di/Injectable.h"
+#include "jablotron/JablotronDeviceManager.h"
+#include "util/ZMQUtil.h"
+#include "zmq/ZMQMessage.h"
 
 BEEEON_OBJECT_BEGIN(BeeeOn, JablotronDeviceManager)
 BEEEON_OBJECT_CASTABLE(StoppableRunnable)
@@ -40,30 +38,40 @@ using namespace Poco;
 #define LOW_BATTERY                 5
 #define MAX_DEVICES_IN_JABLOTRON    32
 #define MAX_NUMBER_FAILED_REPEATS   10
-#define MIN_MESSAGE_SIZE            5
 #define NUMBER_OF_RETRIES           3
-#define QUEUE_WAIT                  500000
+#define QUEUE_WAIT                  50000
 #define SET_STATE                   2
 #define UNKNOWN_STATE               0
 #define UNSET_STATE                 1
 
 JablotronDeviceManager::JablotronDeviceManager():
 	DeviceManager(),
-	m_sensorEvent(false)
+	m_sensorEvent(false),
+	m_queueLoop(false),
+	m_callback(*this, &JablotronDeviceManager::stopListen),
+	m_listen(false),
+	m_deferAfter(1000, 0)
 {
 	m_zmqClient->onReceive += delegate(this, &JablotronDeviceManager::onEvent);
 }
 
 void JablotronDeviceManager::run()
 {
-	initJablotronSerial();
-	runClient();
-
-	RegularExpression re("([a-zA-Z0-9]+)");
 	bool loadDevices = false;
 	string buffer;
 
+	initJablotronSerial();
+	runClient();
+
+	sleep(1);
+	getDeviceList();
+
 	while (!m_stop) {
+		checkQueue();
+
+		if (m_devicesWithFlag.size() == 0)
+			continue;
+
 		if (!loadJablotronDevices(loadDevices)) {
 			sleep(DELAY_BETWEEN_PARSE);
 			continue;
@@ -72,12 +80,74 @@ void JablotronDeviceManager::run()
 		if (!readFromSerial(buffer))
 			continue;
 
-		StringTokenizer token(buffer, " ");
-
+		StringTokenizer token(trim(buffer), " ");
 		if (token.count() < 3)
 			continue;
 
-		sendMeasuredValues(buffer, token);
+		sendMeasuredValues(trim(buffer), token);
+	}
+}
+
+void JablotronDeviceManager::getDeviceList()
+{
+	m_devicesWithFlag.clear();
+
+	Answer::Ptr answer = new Answer(m_queue);
+	ServerDeviceListCommand::Ptr cmd = new ServerDeviceListCommand(m_prefix);
+
+	ZMQMessage msg = ZMQMessage::fromCommand(cmd);
+	msg.setID(GlobalID::random());
+
+	m_zmqClient->send(msg.toString());
+	m_table.insert(make_pair(answer, ResultData{msg.id(), cmd}));
+
+	logger().debug("run cmd: " + cmd->name());
+}
+
+void JablotronDeviceManager::getLastValue(const DeviceID &deviceID)
+{
+	Answer::Ptr answer = new Answer(m_queue);
+	ServerLastValueCommand::Ptr cmd =
+		new ServerLastValueCommand(deviceID, JABLOTRON_MAINS_OUTLET);
+
+	ZMQMessage msg = ZMQMessage::fromCommand(cmd);
+	msg.setID(GlobalID::random());
+
+	m_zmqClient->send(msg.toString());
+	m_table.insert(make_pair(answer, ResultData{msg.id(), cmd}));
+
+	logger().debug("run cmd: " + cmd->name());
+}
+
+void JablotronDeviceManager::checkQueue()
+{
+	std::list<Answer::Ptr> dirtyList;
+	m_queue.wait(QUEUE_WAIT, dirtyList);
+
+	for (auto answer : dirtyList) {
+		auto it = m_table.find(answer);
+
+		if (it == m_table.end()) {
+			logger().warning("unknown result");
+			break;
+		}
+
+		if (it->second.cmd->is<ServerDeviceListCommand>()) {
+			m_devicesWithFlag.clear();
+
+			for (auto deviceID : answer->at(0).cast<ServerDeviceListResult>()->deviceList())
+				m_devicesWithFlag.insert(deviceID);
+		}
+
+		if (it->second.cmd->is<ServerLastValueCommand>()) {
+			if (answer->at(0).cast<ServerLastValueResult>()->status() != Result::SUCCESS) {
+				return;
+			}
+
+			setSwitch(
+				it->second.cmd.cast<ServerLastValueCommand>()->deviceID(),
+				(short) answer->at(0).cast<ServerLastValueResult>()->value());
+		}
 	}
 }
 
@@ -85,17 +155,67 @@ void JablotronDeviceManager::onEvent(const void *, ZMQMessage &zmqMessage)
 {
 	switch(zmqMessage.type().raw()){
 	case ZMQMessageType::TYPE_DEVICE_LAST_VALUE_RESULT:
-		for (auto item : m_table) {
-			if (item.second.id != zmqMessage.id())
-				continue;
-
-
-			ServerLastValueResult::Ptr res = new ServerLastValueResult(item.first);
-			zmqMessage.toServerLastValueResult(res);
-		}
+		doDeviceLastValueResult(zmqMessage);
+		break;
+	case ZMQMessageType::TYPE_DEVICE_LIST_RESULT:
+		doTypeDeviceListResult(zmqMessage);
+		break;
+	case ZMQMessageType::TYPE_LISTEN_CMD:
+		doListenCommand(zmqMessage);
+		break;
+	case ZMQMessageType::TYPE_DEVICE_UNPAIR_CMD:
+		doDeviceUnpairCommand(zmqMessage);
+		break;
+	case ZMQMessageType::TYPE_SET_VALUES_CMD:
+		doSetValuesCommand(zmqMessage);
 		break;
 	default:
-		logger().error("unsupported result " + zmqMessage.type().toString());
+		logger().error("unsupported cmd " + zmqMessage.type().toString());
+	}
+}
+
+void JablotronDeviceManager::doSetValuesCommand(ZMQMessage &zmqMessage)
+{
+	DeviceSetValueCommand::Ptr cmd = zmqMessage.toDeviceSetValueCommand();
+
+	setSwitch(
+		cmd.cast<DeviceSetValueCommand>()->deviceID(),
+		(short) cmd.cast<DeviceSetValueCommand>()->value());
+}
+
+void JablotronDeviceManager::doDeviceUnpairCommand(ZMQMessage &zmqMessage)
+{
+	DeviceUnpairCommand::Ptr cmd = zmqMessage.toDeviceUnpairCommand();
+	m_devicesWithFlag.erase(cmd->deviceID());
+}
+
+void JablotronDeviceManager::doListenCommand(ZMQMessage &zmqMessage)
+{
+	GatewayListenCommand::Ptr cmd = zmqMessage.toGatewayListenCommand();
+	m_deferAfter.setStartInterval(cmd->duration().totalMilliseconds());
+
+	startListen(m_deferAfter);
+}
+
+void JablotronDeviceManager::doTypeDeviceListResult(ZMQMessage &zmqMessage)
+{
+	for (auto item : m_table) {
+		if (item.second.id != zmqMessage.id())
+			continue;
+
+		ServerDeviceListResult::Ptr res = new ServerDeviceListResult(item.first);
+		zmqMessage.toServerDeviceListResult(res);
+	}
+}
+
+void JablotronDeviceManager::doDeviceLastValueResult(ZMQMessage &zmqMessage)
+{
+	for (auto item : m_table) {
+		if (item.second.id != zmqMessage.id())
+			continue;
+
+		ServerLastValueResult::Ptr res = new ServerLastValueResult(item.first);
+		zmqMessage.toServerLastValueResult(res);
 	}
 }
 
@@ -209,7 +329,10 @@ bool JablotronDeviceManager::loadRegDevices()
 		}
 	}
 
-	obtainActuatorState();
+	for (auto deviceID : m_devicesWithFlag) {
+		if (getDeviceType(deviceID.ident() & 0xffffff) == AC88)
+			getLastValue(deviceID);
+	}
 
 	usleep(DELAY_BEETWEEN_CYCLES);
 	return true;
@@ -217,20 +340,21 @@ bool JablotronDeviceManager::loadRegDevices()
 
 bool JablotronDeviceManager::readFromSerial(std::string &data)
 {
-	data = m_serial->sread();
+	RegularExpression re("(?!\\n)[^\\n]*(?=\\n)");
+	vector<string> splitReceiveData;
+	m_buffer += m_serial->sread();
 
-	if (data.length() < MIN_MESSAGE_SIZE)
+	if (re.split(m_buffer, splitReceiveData) == 0)
 		return false;
+
+	m_buffer.erase(0, splitReceiveData.front().size() + 2);
+	data = splitReceiveData.front();
+	logger().debug("receive data: " + data);
 
 	// OK or ERROR sending dongle whether the sent message is valid or not.
 	// Ok Send when the dongle has nothing to send too.
 	// Documentation: https://www.turris.cz/gadgets/manual#obecne_principy_komunikace
-	replaceInPlace(data, string("\nOK\n"), string(""));
-	replaceInPlace(data, "\nERROR\n", "");
-
-	data = trim(data);
-
-	return true;
+	return !(data == "OK" || data == "ERROR");
 }
 
 /**
@@ -251,15 +375,22 @@ void JablotronDeviceManager::sendMeasuredValues(const string &message,
 		return;
 	}
 
+	auto it = m_devicesWithFlag.find(sensorData.deviceID());
+	if (it == m_devicesWithFlag.end() && !m_listen) {
+		logger().debug("drop message");
+		return;
+	}
+
 	m_zmqClient->send(ZMQMessage::fromSensorData(sensorData).toString());
 
 	if (m_sensorEvent) {
-		sleep(1); // TODO navrhnut lepsi sposob
+		sleep(1);
 		SensorData sensorDataEvent;
 		sensorDataEvent.setDeviceID(sensorData.deviceID());
 		sensorData.insertValue(m_sensorEventValue);
 
 		m_zmqClient->send(ZMQMessage::fromSensorData(sensorDataEvent).toString());
+		m_sensorEvent = false;
 	}
 }
 
@@ -306,7 +437,7 @@ SensorData JablotronDeviceManager::parseMessageFromDevice(
 		sensorData.insertValue(parseMessageFromTP82N(message, token[2]));
 		break;
 	default:
-		throw InvalidArgumentException("unknown device");
+		throw InvalidArgumentException("unknown jablotron device");
 	}
 
 	return sensorData;
@@ -462,57 +593,11 @@ void JablotronDeviceManager::setSwitch(const DeviceID &deviceID, short sw)
 	else
 		pgy = sw;
 
-	retransmissionPacket("\x1BTX ENROLL:0 PGX:" + to_string(pgx) +
-		" PGY:" + to_string(pgy) + " ALARM:0 BEEP:FAST\n");
-}
+	string setString = "\x1BTX ENROLL:0 PGX:" + to_string(pgx) +
+		" PGY:" + to_string(pgy) + " ALARM:0 BEEP:FAST\n";
 
-void JablotronDeviceManager::obtainActuatorState()
-{
-	unsigned long requestCount = 0;
-
-	for (auto device : m_devices) {
-		if (getDeviceType(device) != AC88)
-			continue;
-
-		Answer::Ptr answer = new Answer(m_queue);
-		ServerLastValueCommand::Ptr cmd =
-			new ServerLastValueCommand(createDeviceID(device), JABLOTRON_MAINS_OUTLET);
-
-		ZMQMessage msg = ZMQMessage::fromCommand(cmd);
-		msg.setID(GlobalID::random());
-
-		m_zmqClient->send(msg.toString());
-		m_table.insert(make_pair(answer, ResultData{msg.id(), cmd}));
-
-		logger().debug("try get last value for: " + to_string(device));
-
-		requestCount++;
-	}
-
-	setLastValue(requestCount);
-}
-
-void JablotronDeviceManager::setLastValue(unsigned long requestCount)
-{
-	std::list<Answer::Ptr> dirtyList;
-	while (requestCount > 0 && !m_stop) {
-		m_queue.wait(QUEUE_WAIT, dirtyList);
-
-		requestCount -= dirtyList.size();
-		for (auto answer : dirtyList) {
-			auto it = m_table.find(answer);
-
-			DeviceID deviceID = it->second.cmd.cast<ServerLastValueCommand>()->deviceID();
-			double value = answer->at(0).cast<ServerLastValueResult>()->value();
-
-			if (answer->at(0)->status() != Result::SUCCESS) {
-				logger().error("invalid set result for set value");
-				continue;
-			}
-
-			setSwitch(deviceID, (short) value);
-		}
-	}
+	logger().debug("set switch: " + setString);
+	retransmissionPacket(setString);
 }
 
 double JablotronDeviceManager::getValue(const string& msg) const
@@ -545,4 +630,18 @@ DeviceID JablotronDeviceManager::createDeviceID(JablotronSerialNumber sn) const
 void JablotronDeviceManager::setDonglePath(const std::string &path)
 {
 	m_donglePath = path;
+}
+
+void JablotronDeviceManager::startListen(Timer &timer)
+{
+	logger().debug("start listen");
+	m_listen = true;
+	timer.start(m_callback);
+}
+
+void JablotronDeviceManager::stopListen(Timer &)
+{
+	logger().debug("stop listen");
+	m_listen = false;
+	getDeviceList();
 }

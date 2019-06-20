@@ -122,6 +122,11 @@ void ZMQMessage::setTimeout(const Poco::Timespan &timeout)
 	m_json->set("timeout", timeout.totalSeconds());
 }
 
+void ZMQMessage::setExtendetSetStatus(DeviceSetValueResult::SetStatus status)
+{
+	m_json->set("extented_set_status", (int) status);
+}
+
 ZMQMessageError::Error ZMQMessage::getErrorCode()
 {
 	return static_cast<ZMQMessageError::Error>(
@@ -188,6 +193,12 @@ Timespan ZMQMessage::getDuration()
 {
 	return Timespan(Timespan::SECONDS
 		* JsonUtil::extract<int>(m_json, "duration"));
+}
+
+DeviceSetValueResult::SetStatus ZMQMessage::getExtendetSetStatus()
+{
+	return static_cast<DeviceSetValueResult::SetStatus>(
+		JsonUtil::extract<int>(m_json, "extented_set_status"));
 }
 
 GlobalID ZMQMessage::id()
@@ -310,6 +321,9 @@ ZMQMessage ZMQMessage::fromResult(const Result::Ptr result)
 	else if (result->is<ServerLastValueResult>()) {
 		return fromServerLastValueResult(result.cast<ServerLastValueResult>());
 	}
+	else if (result->is<DeviceSetValueResult>()) {
+		return fromDeviceSetValueResult(result.cast<DeviceSetValueResult>());
+	}
 	else {
 		throw Poco::ExistsException("unsupported result");
 	}
@@ -329,7 +343,9 @@ ZMQMessage ZMQMessage::fromDefaultResult(const Result::Ptr result)
 ZMQMessage ZMQMessage::fromDeviceSetValueCommand(const DeviceSetValueCommand::Ptr cmd)
 {
 	Object::Ptr values = new Object();
+
 	ZMQMessage msg;
+	msg.setID(GlobalID::random());
 
 	msg.setType(ZMQMessageType::fromRaw(
 		ZMQMessageType::TYPE_SET_VALUES_CMD));
@@ -413,9 +429,23 @@ ZMQMessage ZMQMessage::fromDeviceUnpairCommand(const DeviceUnpairCommand::Ptr cm
 	ZMQMessage msg;
 	Object::Ptr json = msg.jsonObject();
 
+	msg.setID(GlobalID::random());
 	msg.setType(ZMQMessageType::fromRaw(
 		ZMQMessageType::TYPE_DEVICE_UNPAIR_CMD));
 	msg.setDeviceID(json, cmd->deviceID());
+
+	return msg;
+}
+
+ZMQMessage ZMQMessage::fromDeviceSetValueResult(
+	const DeviceSetValueResult::Ptr result)
+{
+	ZMQMessage msg;
+
+	msg.setType(ZMQMessageType::fromRaw(
+		ZMQMessageType::TYPE_SET_VALUES_RESULT));
+	msg.setResultState(result->status());
+	msg.setExtendetSetStatus(result->extendetSetStatus());
 
 	return msg;
 }
@@ -517,4 +547,10 @@ void ZMQMessage::toServerLastValueResult(ServerLastValueResult::Ptr result)
 DeviceUnpairCommand::Ptr ZMQMessage::toDeviceUnpairCommand()
 {
 	return new DeviceUnpairCommand(getDeviceID(m_json));
+}
+
+void ZMQMessage::toDeviceSetValueResult(DeviceSetValueResult::Ptr result)
+{
+	result->setStatus(getResultState());
+	result->setExtendetSetStatus((getExtendetSetStatus()));
 }

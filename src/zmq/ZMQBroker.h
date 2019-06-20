@@ -11,6 +11,7 @@
 #include "model/GlobalID.h"
 #include "zmq/ZMQConnector.h"
 #include "zmq/ZMQDeviceManagerTable.h"
+#include "zmq/FakeHandlerTest.h"
 
 namespace BeeeOn {
 
@@ -43,6 +44,8 @@ public:
 
 	unsigned long deviceManagersCount();
 
+	void setFakeHandlerTest(Poco::SharedPtr<FakeHandlerTest> handler);
+
 protected:
 	void configureDataSockets() override;
 	void configureHelloSockets() override;
@@ -62,11 +65,27 @@ protected:
 
 	void checkQueue();
 
+	void checkSettingTable(Poco::Timer &timer);
+
+	void doDefaultResult(ZMQMessage &zmqMessage);
+
+	void doDeviceLastValueCommand(ZMQMessage &zmqMessage,
+		const DeviceManagerID &deviceManagerID);
+
+	void doDeviceListCommand(ZMQMessage &zmqMessage,
+		const DeviceManagerID &deviceManagerID);
+
 protected:
 	struct ResultData {
 		GlobalID resultID;
 		DeviceManagerID deviceManagerID;
 		Command::Ptr cmd;
+	};
+
+	struct ResultData2 {
+		Answer::Ptr answer;
+		Command::Ptr cmd;
+		Result::Ptr result;
 	};
 
 protected:
@@ -75,6 +94,19 @@ protected:
 	ZMQDeviceManagerTable m_deviceManagersTable;
 	std::map<Answer::Ptr, ResultData> m_resultTable;
 	AnswerQueue m_answerQueue;
+
+	std::map<GlobalID, ResultData2> m_cmdTable;
+	Poco::SharedPtr<FakeHandlerTest> m_fakeHandlerTest;
+
+	Poco::Timer m_timer;
+	Poco::TimerCallback<ZMQBroker> m_callback;
+
+	struct SettingValueItem {
+		Command::Ptr cmd;
+		Answer::Ptr answer;
+		Poco::Timestamp endTime;
+	};
+	std::map<DeviceID, SettingValueItem> m_settingTable;
 };
 
 }

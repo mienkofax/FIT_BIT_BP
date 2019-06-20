@@ -24,6 +24,7 @@ PATH
 file(GLOB SOURCES
 	${PROJECT_SOURCE_DIR}/zmq/FakeHandler.cpp
 	${PROJECT_SOURCE_DIR}/commands/DeviceSetValueCommand.cpp
+	${PROJECT_SOURCE_DIR}/commands/DeviceSetValueResult.cpp
 	${PROJECT_SOURCE_DIR}/commands/DeviceUnpairCommand.cpp
 	${PROJECT_SOURCE_DIR}/commands/GatewayListenCommand.cpp
 	${PROJECT_SOURCE_DIR}/commands/ServerDeviceListCommand.cpp
@@ -54,6 +55,7 @@ file(GLOB SOURCES
 	${PROJECT_SOURCE_DIR}/util/SensorDataFormatter.cpp
 	${PROJECT_SOURCE_DIR}/util/ZMQUtil.cpp
 	${PROJECT_SOURCE_DIR}/zmq/ZMQBroker.cpp
+	${PROJECT_SOURCE_DIR}/zmq/FakeHandlerTest.cpp
 	${PROJECT_SOURCE_DIR}/zmq/ZMQClient.cpp
 	${PROJECT_SOURCE_DIR}/zmq/ZMQConnector.cpp
 	${PROJECT_SOURCE_DIR}/zmq/ZMQDeviceManagerTable.cpp
@@ -65,8 +67,16 @@ file(GLOB SOURCES
 	${PROJECT_SOURCE_DIR}/z-wave/NotificationProcessor.cpp
 	${PROJECT_SOURCE_DIR}/z-wave/ZWaveDeviceManager.cpp
 	${PROJECT_SOURCE_DIR}/z-wave/ZWaveMessage.cpp
+	${PROJECT_SOURCE_DIR}/z-wave/manufacturers/AeotecZWaveMessageFactory.cpp
+	${PROJECT_SOURCE_DIR}/z-wave/manufacturers/DLinkZWaveMessageFactory.cpp
 	${PROJECT_SOURCE_DIR}/z-wave/manufacturers/FibaroZWaveMessageFactory.cpp
+	${PROJECT_SOURCE_DIR}/z-wave/manufacturers/PhilioZWaveMessageFactory.cpp
+	${PROJECT_SOURCE_DIR}/z-wave/manufacturers/PoppZWaveMessageFactory.cpp
 	${PROJECT_SOURCE_DIR}/z-wave/products/FibaroFGK107ZWaveMessage.cpp
+	${PROJECT_SOURCE_DIR}/z-wave/products/AeotecZW100ZWaveMessage.cpp
+	${PROJECT_SOURCE_DIR}/z-wave/products/DLinkDchZ120ZWaveMessage.cpp
+	${PROJECT_SOURCE_DIR}/z-wave/products/PhilioPST021CZWaveMessage.cpp
+	${PROJECT_SOURCE_DIR}/z-wave/products/Popp123601ZWaveMessage.cpp
 )
 
 include_directories(
